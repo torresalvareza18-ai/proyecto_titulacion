@@ -16,19 +16,11 @@ class PostsRepository {
    return postsAPIService.getPosts();
  }
 
- Future<void> add(Post post, tags) async {
-   return postsAPIService.addPost(post, tags);
- }
-
- Future<void> update(Post updatedPost) async {
+ /*Future<void> update(Post updatedPost) async {
    return postsAPIService.updatePost(updatedPost);
- }
+ }*/
 
- Future<void> delete(Post deletedPost) async {
+ /*Future<void> delete(Post deletedPost) async {
    return postsAPIService.deletePost(deletedPost);
- }
-
- Future<Post> getTrip(String postId) async {
-   return postsAPIService.getPost(postId);
- }
+ }*/
 }

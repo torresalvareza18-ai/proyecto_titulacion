@@ -4,7 +4,6 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:proyecto_titulacion/features/posts/controller/posts_list_controller.dart';
 import 'package:proyecto_titulacion/features/posts/service/posts_api_service.dart';
-import 'package:proyecto_titulacion/features/posts/ui/edit_post_sheet.dart';
 import 'package:proyecto_titulacion/models/Post.dart';
 import 'package:proyecto_titulacion/common/ui/widgets/storage_image.dart';
 import 'package:device_calendar/device_calendar.dart';
@@ -30,62 +29,61 @@ class _ExpandablePostCardState extends ConsumerState<ExpandablePostCard> {
 
     
     Future<void> _guardarEnCalendarioNativo(Post post) async {
-  if (post.dates == null || post.dates!.isEmpty) return;
+      if (post.dates == null || post.dates!.isEmpty) return;
 
-  final DeviceCalendarPlugin _deviceCalendarPlugin = DeviceCalendarPlugin();
+      final DeviceCalendarPlugin _deviceCalendarPlugin = DeviceCalendarPlugin();
 
-  // 1. PEDIR PERMISOS
-  var permissionsGranted = await _deviceCalendarPlugin.hasPermissions();
-  if (permissionsGranted.isSuccess && !permissionsGranted.data!) {
-    permissionsGranted = await _deviceCalendarPlugin.requestPermissions();
-    if (!permissionsGranted.isSuccess || !permissionsGranted.data!) {
-      print(" El usuario denegó el permiso");
-      return;
+      // 1. PEDIR PERMISOS
+      var permissionsGranted = await _deviceCalendarPlugin.hasPermissions();
+      if (permissionsGranted.isSuccess && !permissionsGranted.data!) {
+        permissionsGranted = await _deviceCalendarPlugin.requestPermissions();
+        if (!permissionsGranted.isSuccess || !permissionsGranted.data!) {
+          print(" El usuario denegó el permiso");
+          return;
+        }
+      }
+
+      // 2. BUSCAR EL CALENDARIO POR DEFECTO
+      final calendarsResult = await _deviceCalendarPlugin.retrieveCalendars();
+      final calendar = calendarsResult.data?.firstWhere(
+        (c) => c.isDefault == true && c.isReadOnly == false,
+        orElse: () => calendarsResult.data!.first,
+      );
+
+      if (calendar == null) {
+        print("No se encontró ningún calendario en el celular");
+        return;
+      }
+
+      // 3. GUARDAR LAS FECHAS
+      for (var dateTemporal in post.dates!) {
+        final fecha = DateTime.parse(dateTemporal.toString());
+        
+        final event = Event(
+          calendar.id,
+          title: "Evento: ${post.title}",
+          description: post.description ?? "Guardado desde TripsPlanner",
+          start: tz.TZDateTime.from(fecha, tz.local),
+          end: tz.TZDateTime.from(fecha.add(const Duration(hours: 2)), tz.local),
+          allDay: true,
+        );
+
+        final result = await _deviceCalendarPlugin.createOrUpdateEvent(event);
+        
+        if (result!.isSuccess && result.data != null) {
+          print("Fecha $fecha guardada con éxito en calendario ${calendar.name}");
+        } else {
+          print("Error guardando fecha: ${result.errors}");
+        }
+      }
+      
+      // Avisar al usuario al final
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('¡Fechas guardadas en tu calendario!'))
+        );
+      }
     }
-  }
-
-  // 2. BUSCAR EL CALENDARIO POR DEFECTO
-  final calendarsResult = await _deviceCalendarPlugin.retrieveCalendars();
-  // Buscamos el calendario que sea "Default" y no sea de solo lectura
-  final calendar = calendarsResult.data?.firstWhere(
-    (c) => c.isDefault == true && c.isReadOnly == false,
-    orElse: () => calendarsResult.data!.first, // Si no hay default, agarramos el primero
-  );
-
-  if (calendar == null) {
-    print("No se encontró ningún calendario en el celular");
-    return;
-  }
-
-  // 3. GUARDAR LAS FECHAS
-  for (var dateTemporal in post.dates!) {
-    final fecha = DateTime.parse(dateTemporal.toString());
-    
-    final event = Event(
-      calendar.id,
-      title: "Evento: ${post.title}",
-      description: post.description ?? "Guardado desde TripsPlanner",
-      start: tz.TZDateTime.from(fecha, tz.local),
-      end: tz.TZDateTime.from(fecha.add(const Duration(hours: 2)), tz.local),
-      allDay: true,
-    );
-
-    final result = await _deviceCalendarPlugin.createOrUpdateEvent(event);
-    
-    if (result!.isSuccess && result.data != null) {
-      print("Fecha $fecha guardada con éxito en calendario ${calendar.name}");
-    } else {
-      print("Error guardando fecha: ${result.errors}");
-    }
-  }
-  
-  // Avisar al usuario al final
-  if (mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('¡Fechas guardadas en tu calendario!'))
-    );
-  }
-}
 
     return Card(
       elevation: 0, 
@@ -182,12 +180,7 @@ class _ExpandablePostCardState extends ConsumerState<ExpandablePostCard> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            TextButton(
-                              onPressed: () async {
-                                await ref.read(postsListControllerProvider.notifier).removePost(post);
-                              }, 
-                              child: const Text('Borrar')
-                            ),
+                            
                             const SizedBox(width: 8),
                             FilledButton.icon(
                               onPressed: () async {
@@ -198,7 +191,7 @@ class _ExpandablePostCardState extends ConsumerState<ExpandablePostCard> {
                                 showDragHandle: true,
                                 builder: (context) => SizedBox(
                                   height: MediaQuery.of(context).size.height * 0.9,
-                                  child: EditPostSheet(post: post), 
+                                  //child: EditPostSheet(post: post), 
                                 ),
                                );
                               }, 

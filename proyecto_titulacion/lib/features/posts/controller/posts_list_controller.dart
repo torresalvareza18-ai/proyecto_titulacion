@@ -23,59 +23,7 @@ class PostsListController extends _$PostsListController {
    return _fetchPosts();
  }
 
- Future<void> addPost({
-   required String title,
-   required String description,
-   required List<String> dates,
-   required List<String> tags,
-   required List<String> imageKey,
- }) async {
-   final parsedDates = dates 
-      .map((d) => TemporalDate(DateTime.parse(d)))
-      .toList();
-
-   
-    final currentUser = await Amplify.Auth.getCurrentUser();
-    final userId = currentUser.userId;
-
-    String nombreAutor = currentUser.username;
-
-    try {
-      final attributes = await Amplify.Auth.fetchUserAttributes();
-
-      final nameAttr = attributes.firstWhere(
-        (attr) => attr.userAttributeKey == CognitoUserAttributeKey.name,
-        orElse: () => const AuthUserAttribute(userAttributeKey: CognitoUserAttributeKey.name, value: ""),
-      );
-
-      nombreAutor = nameAttr.value;
-
-    } catch (e) {
-      safePrint(e);
-    }
-
-   final post = Post(
-     title: title,
-     description: description,
-     dates: parsedDates,
-     createdAt: TemporalDateTime.now(),
-     updatedAt: TemporalDateTime.now(),
-     authorId: userId,
-     tags: tags,
-     images: imageKey,
-     authorName: nombreAutor,
-   );
-
-   state = const AsyncValue.loading();
-
-   state = await AsyncValue.guard(() async {
-     final postsRepository = ref.read(postsRepositoryProvider);
-     await postsRepository.add(post, tags);
-     return _fetchPosts();
-   });
- }
-
- Future<void> removePost(Post post) async {
+ /*Future<void> removePost(Post post) async {
    state = const AsyncValue.loading();
    state = await AsyncValue.guard(() async {
      final postsRepository = ref.read(postsRepositoryProvider);
@@ -83,9 +31,9 @@ class PostsListController extends _$PostsListController {
 
      return _fetchPosts();
    });
- }
+ }*/
 
- Future<void> updatePost({
+ /*Future<void> updatePost({
   required Post originalPost,
   required String title,
   required String description,
@@ -110,5 +58,5 @@ class PostsListController extends _$PostsListController {
 
       return _fetchPosts(); 
     });
- }
+ }*/
 }
