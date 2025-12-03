@@ -1,4 +1,5 @@
 import 'package:proyecto_titulacion/features/posts/service/posts_api_service.dart';
+import 'package:proyecto_titulacion/models/ModelProvider.dart';
 import 'package:proyecto_titulacion/models/Post.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,11 +17,19 @@ class PostsRepository {
    return postsAPIService.getPosts();
  }
 
- /*Future<void> update(Post updatedPost) async {
-   return postsAPIService.updatePost(updatedPost);
- }*/
+ Future<PaginatedResult<Post>> getPostsByTagPaginated({
+  int currentPage = 0, 
+  int postsPerPage = 20, 
+  required String tagName
+  }) {
+    return postsAPIService.getPostsByTagPaginated(
+      tagName: tagName, 
+      currentPage: currentPage, 
+      postsPerPage: postsPerPage
+    );
+ }
 
- /*Future<void> delete(Post deletedPost) async {
-   return postsAPIService.deletePost(deletedPost);
- }*/
+ Future<List<TagCatalog>> getAllTagCatalogs() {
+  return postsAPIService.getAllTagCatalogs();
+ }
 }

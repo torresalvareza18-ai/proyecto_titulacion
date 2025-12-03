@@ -27,7 +27,7 @@ class _NavigationMenuState extends State<NavigationMenu> {
     final ThemeData theme = Theme.of(context);
     return Scaffold(
       body: <Widget>[
-        const PostsListPage(),
+        const PostsListPage(tagName: 'urgente'),
         const Center(child: Text('perfil')),
         const Center(child: Text('perfil'))
       ][currentPageIndex],

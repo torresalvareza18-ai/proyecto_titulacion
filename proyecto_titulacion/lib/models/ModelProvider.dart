@@ -22,15 +22,17 @@
 import 'package:amplify_core/amplify_core.dart' as amplify_core;
 import 'Post.dart';
 import 'PostTag.dart';
+import 'TagCatalog.dart';
 
 export 'Post.dart';
 export 'PostTag.dart';
+export 'TagCatalog.dart';
 
 class ModelProvider implements amplify_core.ModelProviderInterface {
   @override
-  String version = "de4203f11888731e92a6ac06bfb72856";
+  String version = "28574cb374098acaf6cd6b7e64583df1";
   @override
-  List<amplify_core.ModelSchema> modelSchemas = [Post.schema, PostTag.schema];
+  List<amplify_core.ModelSchema> modelSchemas = [Post.schema, PostTag.schema, TagCatalog.schema];
   @override
   List<amplify_core.ModelSchema> customTypeSchemas = [];
   static final ModelProvider _instance = ModelProvider();
@@ -43,6 +45,8 @@ class ModelProvider implements amplify_core.ModelProviderInterface {
         return Post.classType;
       case "PostTag":
         return PostTag.classType;
+      case "TagCatalog":
+        return TagCatalog.classType;
       default:
         throw Exception("Failed to find model in model provider for model name: " + modelName);
     }
