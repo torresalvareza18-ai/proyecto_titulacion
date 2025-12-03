@@ -9,14 +9,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class PostsListPage extends ConsumerStatefulWidget {
   final String tagName;
   const PostsListPage({required this.tagName, super.key});
-
   @override
   ConsumerState<PostsListPage> createState() => _PostsListPageState();
 }
 
 class _PostsListPageState extends ConsumerState<PostsListPage> {
   final ScrollController _scrollController = ScrollController();
-
+  
   @override
   void initState() {
     super.initState();
@@ -41,12 +40,21 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
     super.dispose();
   }
 
+  void _handleChipTapped(String newTagName) {
+    safePrint('EL newTagName es ${newTagName}');
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PostsListPage(tagName: newTagName),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
 
     final postsAsync = ref.watch(postsListControllerProvider);
     final tagsAsync = ref.watch(tagListControllerProvider);
-    safePrint(tagsAsync.toString());
     final hasMore = ref.read(postsListControllerProvider.notifier).hasMore;
 
     final Map<String, IconData> iconMap = {
@@ -103,12 +111,14 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
                 itemCount: tags.length,
                 itemBuilder: (context, index) {
                   if (index == 0) {
+                    const tagValue = 'todos';
                     return Padding(
                       padding: const EdgeInsets.only(right: 8.0, left: 8.0),
                       child: _buildCategoryChip(
                         'Todos', 
                         Icons.home, 
-                        widget.tagName == 'todos' 
+                        widget.tagName == 'todos',
+                        () => _handleChipTapped(tagValue),
                       ),
                     );
                   }
@@ -118,7 +128,8 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
                   child: _buildCategoryChip(
                     tag.label, 
                     iconMap[tag.iconName] ?? Icons.category, 
-                    tag.value == widget.tagName
+                    tag.value == widget.tagName,
+                    () => _handleChipTapped(tag.label),
                   ),
                 );
                   
@@ -163,43 +174,47 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
   }
 
   Widget _buildCircleActionButton(IconData icon, VoidCallback onPressed) {
-  return Container(
-    width: 40,
-    height: 40,
-    decoration: const BoxDecoration(
-      color: Color(0xFFA5F2C6),
-      shape: BoxShape.circle,
-    ),
-    child: IconButton(
-      icon: Icon(icon, color: Colors.black87, size: 20),
-      onPressed: onPressed,
-    ),
-  );
-}
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: const BoxDecoration(
+        color: Color(0xFFA5F2C6),
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.black87, size: 20),
+        onPressed: onPressed,
+      ),
+    );
+  }
 
-Widget _buildCategoryChip(String label, IconData icon, bool isSelected) {
-  return Container(
-    height: 30,
-    padding: const EdgeInsets.symmetric(horizontal: 8),
+  Widget _buildCategoryChip(String label, IconData icon, bool isSelected, VoidCallback onTap) {
     
-    decoration: BoxDecoration(
-      color: isSelected ? Colors.orangeAccent : Colors.transparent,
-      borderRadius: BorderRadius.circular(12),
-      border: isSelected ? null : Border.all(color: Colors.grey.shade400),
-    ),
-    child: Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.black87),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 30,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.orangeAccent : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: isSelected ? null : Border.all(color: Colors.grey.shade400),
         ),
-      ],
-    ),
-  );
-}
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: Colors.black87),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );    
+  }
 }

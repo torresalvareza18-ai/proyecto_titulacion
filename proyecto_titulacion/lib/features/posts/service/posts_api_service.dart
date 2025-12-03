@@ -31,63 +31,106 @@ class PostsAPIService {
     }
   }
 
-  Future<List<PostTag>> getPostTags( String tagName) async {
-    try {
-      final request = ModelQueries.list(
-        PostTag.classType,
-        where: PostTag.TAGNAME.eq(tagName),
-      );
-      final response = await Amplify.API.query(request: request).response;
+  Future<PostTagPage> getPostTagsPaginated({
+    required String tagName,
+    String? nextToken,
+    int limit = 20,
+  }) async {
+    final bool showAll = tagName == "todos";
 
-      if (response.data == null) {
-        safePrint('Error ${response.errors}');
-        return [];
-      }
+    final document = showAll
+        ? '''
+          query ListPostTagsAll(\$limit: Int, \$nextToken: String) {
+            listPostTags(
+              limit: \$limit,
+              nextToken: \$nextToken
+            ) {
+              items {
+                id
+                postId
+                tagName
+              }
+              nextToken
+            }
+          }
+        '''
+        : '''
+          query ListPostTagsFiltered(\$tagName: String!, \$limit: Int, \$nextToken: String) {
+            listPostTags(
+              filter: { tagName: { eq: \$tagName } },
+              limit: \$limit,
+              nextToken: \$nextToken
+            ) {
+              items {
+                id
+                postId
+                tagName
+              }
+              nextToken
+            }
+          }
+        ''';
 
-      final postTags = response.data?.items.whereType<PostTag>().toList() ?? [];
-      return postTags;
-  
-    } on Exception catch (error) {
-      safePrint('getPostTags failed: $error');
+    final variables = showAll
+        ? {
+            "limit": limit,
+            "nextToken": nextToken,
+          }
+        : {
+            "tagName": tagName,
+            "limit": limit,
+            "nextToken": nextToken,
+          };
 
-      return [];
-    }
+    final request = GraphQLRequest(
+      document: document,
+      variables: variables,
+    );
+
+    final response = await Amplify.API.query(request: request).response;
+
+    final Map<String, dynamic> json = jsonDecode(response.data);
+    final data = json['listPostTags'];
+
+    if (data == null) return PostTagPage(items: [], nextToken: null);
+
+    final items = (data['items'] as List)
+        .map((json) => PostTag.fromJson(Map<String, dynamic>.from(json)))
+        .toList();
+
+    return PostTagPage(items: items, nextToken: data['nextToken']);
   }
+
 
   Future<PaginatedResult<Post>> getPostsByTagPaginated({
     required String tagName,
-    int postsPerPage = 20,
-    int currentPage = 0,
+    required String? nextToken, 
+    int limit = 20,
   }) async {
     try {
-      final allPostTags = await getPostTags(tagName);
-
-      final startIndex = currentPage * postsPerPage;
-      final endIndex = (startIndex + postsPerPage).clamp(0, allPostTags.length);
-
-      final postTagsForPage = allPostTags.sublist(startIndex, endIndex);
+      final tagPage = await getPostTagsPaginated(
+        tagName: tagName,
+        nextToken: nextToken,
+        limit: limit,
+      );
 
       List<Post> posts = [];
-      for (var postTag in postTagsForPage) {
-        if (postTag.postId != null) {
-          final post = await _getPostById(postTag.postId!);
-          if (post != null) {
-            posts.add(post);
-          }
+      for (var tag in tagPage.items) {
+        if (tag.postId != null) {
+          final post = await _getPostById(tag.postId!);
+          if (post != null) posts.add(post);
         }
       }
 
-      final hasNextPage = endIndex < allPostTags.length;
-
-      return PaginatedResult<Post>(
+      return PaginatedResult(
         items: posts,
-        hasNextPage: hasNextPage,
-        currentPage: currentPage,
-        totalItems: allPostTags.length,
+        hasNextPage: tagPage.nextToken != null,
+        currentPage: 0, 
+        totalItems: posts.length,
       );
-    } on Exception catch (error) {
-      safePrint('getPostsByTagPaginated failed: $error');
-      return PaginatedResult<Post>(
+    } catch (e) {
+      safePrint('ERROR getPostsByTagPaginated: $e');
+      return PaginatedResult(
         items: [],
         hasNextPage: false,
         currentPage: 0,
@@ -95,6 +138,7 @@ class PostsAPIService {
       );
     }
   }
+
 
   Future<Post?> _getPostById(String postId) async {
     try {
@@ -146,4 +190,15 @@ class PaginatedResult<T> {
     required this.currentPage,
     required this.totalItems,
   });
+
+  String? get nextToken => null;
+}
+
+class PostTagPage {
+  final List<PostTag> items;
+  final String? nextToken;
+
+  PostTagPage({
+    required this.items, 
+    required this.nextToken});
 }
