@@ -7,7 +7,7 @@ part of 'posts_list_controller.dart';
 // **************************************************************************
 
 String _$postsListControllerHash() =>
-    r'9282defe770453dd8c7291448e7b8a8cc88cb961';
+    r'db1b0d413aa98967a9580441e334baf2e4906715';
 
 /// See also [PostsListController].
 @ProviderFor(PostsListController)

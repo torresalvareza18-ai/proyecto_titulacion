@@ -12,7 +12,7 @@ part 'posts_list_controller.g.dart';
 
 @riverpod
 class PostsListController extends _$PostsListController {
-  int _currentPage = 0;
+  String? _nextToken;
   bool _hasMore = true;
   String _tagName = '';
 
@@ -23,7 +23,7 @@ class PostsListController extends _$PostsListController {
 
   Future<void> loadFirstPage(String tagName) async {
     _tagName = tagName;
-    _currentPage = 0;
+    _nextToken = null;
     _hasMore = true;
 
     state = const AsyncValue.loading();
@@ -32,7 +32,7 @@ class PostsListController extends _$PostsListController {
       final postsRepository = ref.read(postsRepositoryProvider);
       final result = await postsRepository.getPostsByTagPaginated(
         tagName: tagName,
-        currentPage: _currentPage,
+        nextToken: null,
       );
 
       _hasMore = result.hasNextPage;
@@ -49,14 +49,14 @@ class PostsListController extends _$PostsListController {
     if (!currentState.hasValue) return;
 
     try {
-      _currentPage++;
 
       final postsRepository = ref.read(postsRepositoryProvider);
       final result = await postsRepository.getPostsByTagPaginated(
         tagName: _tagName,
-        currentPage: _currentPage,
+        nextToken: _nextToken,
       );
 
+      _nextToken = result.nextToken;
       _hasMore = result.hasNextPage;
 
       state = AsyncValue.data([
