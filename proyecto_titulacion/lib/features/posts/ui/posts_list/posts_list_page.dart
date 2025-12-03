@@ -66,6 +66,7 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
         elevation: 0,
         titleSpacing: 16,
         title: Row(
