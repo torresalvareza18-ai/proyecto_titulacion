@@ -7,21 +7,25 @@ import 'package:proyecto_titulacion/main.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class PostsListPage extends ConsumerStatefulWidget {
-  final String tagName;
-  const PostsListPage({required this.tagName, super.key});
+  final String initialTagName;
+  const PostsListPage({this.initialTagName = 'todos', super.key});
   @override
   ConsumerState<PostsListPage> createState() => _PostsListPageState();
 }
 
 class _PostsListPageState extends ConsumerState<PostsListPage> {
   final ScrollController _scrollController = ScrollController();
+
+  late String _currentTagName;
   
   @override
   void initState() {
     super.initState();
+
+    _currentTagName = widget.initialTagName;
     
     Future.microtask(() {
-      ref.read(postsListControllerProvider.notifier).loadFirstPage(widget.tagName);
+      ref.read(postsListControllerProvider.notifier).loadFirstPage(_currentTagName);
     });
 
     _scrollController.addListener(_onScroll);
@@ -41,13 +45,12 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
   }
 
   void _handleChipTapped(String newTagName) {
+    if (_currentTagName == newTagName) return;
     safePrint('EL newTagName es ${newTagName}');
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PostsListPage(tagName: newTagName),
-      ),
-    );
+    setState(() {
+      _currentTagName = newTagName;
+    });
+    ref.read(postsListControllerProvider.notifier).loadFirstPage(newTagName);
   }
 
   @override
@@ -93,7 +96,7 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
                       child: _buildCategoryChip(
                         'Todos', 
                         Icons.home, 
-                        widget.tagName == 'todos',
+                        _currentTagName == 'todos',
                         () => _handleChipTapped(tagValue),
                       ),
                     );
@@ -104,7 +107,7 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
                   child: _buildCategoryChip(
                     tag.label, 
                     iconMap[tag.iconName] ?? Icons.category, 
-                    tag.value == widget.tagName,
+                    tag.value == _currentTagName,
                     () => _handleChipTapped(tag.label),
                   ),
                 );
@@ -124,7 +127,7 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
          
           return RefreshIndicator(
             onRefresh: () async { 
-              await ref.read(postsListControllerProvider.notifier).loadFirstPage(widget.tagName);
+              await ref.read(postsListControllerProvider.notifier).loadFirstPage(_currentTagName);
             },
             child: ListView.builder(
               controller: _scrollController,
