@@ -16,8 +16,6 @@ Future<void> main() async {
     debugPrint("Amplify ya estaba configurado.");
   }
 
-  
-
   final session = await Amplify.Auth.fetchAuthSession();
   print('Usuario logueado: ${session.isSignedIn}');
   final initialRoute = session.isSignedIn ? '/home' : '/login';

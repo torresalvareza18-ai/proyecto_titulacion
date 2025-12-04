@@ -23,6 +23,7 @@ final router = GoRouter(
       path: '/home',
       builder: (_, __) => const MyMainLayout(),
     ),
+    
   ],
 
   redirect: (context, state) async {

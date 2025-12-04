@@ -74,35 +74,10 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        titleSpacing: 16,
-        title: Row(
-          children: [
-            
-            Image.asset(
-              'images/tablon.png',
-              height: 60,
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'TABLON-QUETZAL',
-              style: TextStyle(
-                color: Color(0xFF4CAF50),
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          _buildCircleActionButton(Icons.search, () {}),
-          const SizedBox(width: 8),
-          _buildCircleActionButton(Icons.notifications_none, () {}),
-          const SizedBox(width: 16),
-        ],
+        
+        
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(50),
+          preferredSize: const Size.fromHeight(5),
           child: Container(
             height: 40,
             margin: const EdgeInsets.only(bottom: 10),
@@ -174,21 +149,6 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
     );
   }
 
-  Widget _buildCircleActionButton(IconData icon, VoidCallback onPressed) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: const BoxDecoration(
-        color: Color(0xFFA5F2C6),
-        shape: BoxShape.circle,
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: Colors.black87, size: 20),
-        onPressed: onPressed,
-      ),
-    );
-  }
-
   Widget _buildCategoryChip(String label, IconData icon, bool isSelected, VoidCallback onTap) {
     
     return GestureDetector(
@@ -218,4 +178,5 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
       ),
     );    
   }
+
 }

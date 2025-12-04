@@ -39,7 +39,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Ruta local de imagen placeholder (puedes reemplazarla)
     const placeholderPath = '/mnt/data/17dac6ae-b115-4b11-aec7-8e998abebf4b.png';
 
     return Scaffold(
