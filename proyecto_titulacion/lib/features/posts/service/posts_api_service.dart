@@ -24,7 +24,7 @@ class PostsAPIService {
       posts.sort((a,b) => b.createdAt!.compareTo(a.createdAt!));
       return posts;
   
-    } on Exception catch (error) {
+    } on Exception catch (error)  {
       safePrint('getposts failed: $error');
 
       return const [];
