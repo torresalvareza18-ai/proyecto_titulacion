@@ -88,7 +88,7 @@ class PostsAPIService {
     );
 
     final response = await Amplify.API.query(request: request).response;
-
+    safePrint(  'GraphQL Response: ${response.data}');
     final Map<String, dynamic> json = jsonDecode(response.data);
     final data = json['listPostTags'];
 
@@ -98,7 +98,16 @@ class PostsAPIService {
         .map((json) => PostTag.fromJson(Map<String, dynamic>.from(json)))
         .toList();
 
-    return PostTagPage(items: items, nextToken: data['nextToken']);
+    final seenPostIds = <String>{};
+    final uniquePosts = items.where((item) {
+      if (item.postId == null) return false;
+      return seenPostIds.add(item.postId!);
+    }).toList();
+
+    safePrint('PostTags fetched: $uniquePosts');
+
+    return PostTagPage(items: uniquePosts, nextToken: data['nextToken']);
+
   }
 
 
