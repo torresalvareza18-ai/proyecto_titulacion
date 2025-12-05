@@ -1,25 +1,29 @@
 import 'package:device_calendar/device_calendar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart'; 
 import 'package:flutter/widgets.dart';
 import 'package:proyecto_titulacion/common/ui/widgets/storage_image.dart';
+import 'package:proyecto_titulacion/features/bookmarkPost/controller/bookmark_controller.dart';
 import 'package:proyecto_titulacion/features/posts/controller/posts_list_controller.dart';
 import 'package:device_calendar/device_calendar.dart';
 import 'package:proyecto_titulacion/models/Post.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 
-class Normal_post extends StatefulWidget {
+class Normal_post extends ConsumerStatefulWidget {
   final Post post;
   const Normal_post({super.key, required this.post, required int index});
 
   @override
-  State<Normal_post> createState() => _normal_postState();
+  ConsumerState<Normal_post> createState() => _normal_postState();
 }
 
-class _normal_postState extends State<Normal_post> {
+class _normal_postState extends ConsumerState<Normal_post> {
   
+  bool? _localSaved;
+
   @override
   void initState() {
     super.initState();
@@ -30,13 +34,23 @@ class _normal_postState extends State<Normal_post> {
   Widget build(BuildContext context) {
 
     final post = widget.post;
+    final bookmarkAsync = ref.watch(myBookmarksListProvider);
+
+    bool backendSaved = bookmarkAsync.maybeWhen(
+      data: (lista) => lista.any((item) => item?.postId == widget.post.id),
+      orElse: () => false, 
+    );
+
+    bool isSaved = _localSaved ?? backendSaved;
+
+    final state = ref.watch(bookmarkSaveControllerProvider);
+    final isLoading = state.isLoading;
 
     Future<void> _guardarEnCalendarioNativo(Post post) async {
       if (post.dates == null || post.dates!.isEmpty) return;
 
       final DeviceCalendarPlugin _deviceCalendarPlugin = DeviceCalendarPlugin();
 
-      //Pedir permisos a don celular
       var permissionsGranted = await _deviceCalendarPlugin.hasPermissions();
       if (permissionsGranted.isSuccess && !permissionsGranted.data!) {
         permissionsGranted = await _deviceCalendarPlugin.requestPermissions();
@@ -46,7 +60,6 @@ class _normal_postState extends State<Normal_post> {
         }
       }
     
-      //Obtner el calendario por defecto
       final calendarsResult = await _deviceCalendarPlugin.retrieveCalendars();
       final calendar = calendarsResult.data?.firstWhere(
         (c) => c.isDefault == true && c.isReadOnly == false,
@@ -59,7 +72,6 @@ class _normal_postState extends State<Normal_post> {
         );
       }
 
-      //Guardar las fechas
       for (var dateTemporal in post.dates!) {
         final fecha = DateTime.parse(dateTemporal.toString());
         final event = Event(
@@ -222,15 +234,38 @@ class _normal_postState extends State<Normal_post> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: _buildActionButton(Icons.favorite_border, 'Me Gusta'),
+                  child: _buildActionButton(Icons.favorite_border, 'Me Gusta', () {
+                    print("Lógica de Me Gusta: Like al post");
+                  }),
                 ),
                 const SizedBox(width: 10), 
                 Expanded(
-                  child: _buildActionButton(Icons.bookmark_border, 'Guardar'),
+                  child: _buildActionButton(
+                    isSaved ? Icons.bookmark : Icons.bookmark_border,
+                    isSaved ? 'Guardado' : 'Guardar',
+                    () {
+                        setState(() {
+                          _localSaved = !isSaved;
+                        });
+
+                        if (isSaved) {
+                          ref.read(bookmarkSaveControllerProvider.notifier).removeBookmark(
+                            postId: widget.post.id
+                          );
+                        } else {
+                          ref.read(bookmarkSaveControllerProvider.notifier).saveBookmark(
+                            postId: widget.post.id
+                          );
+                        }
+                      },
+                    isActive: isSaved,
+                  ),
                 ),
                 const SizedBox(width: 10), 
                 Expanded(
-                  child: _buildActionButton(Icons.calendar_today, 'Agendar'),
+                  child: _buildActionButton(Icons.calendar_today, 'Agendar', () {
+                      print("Lógica de Agendar: Abrir calendario");
+                  }),
                 ),
             ],
           ),
@@ -268,14 +303,18 @@ Widget _buildDetailRow(BuildContext context, IconData icon, String text) {
   );
 }
 
-  Widget _buildActionButton(IconData icon, String text) {
+  Widget _buildActionButton(IconData icon, String text, VoidCallback? onPressed, {bool isActive = false}) {
     final Color mainGreenColor = Colors.green.shade600; 
     final Color fillColor = Colors.green.shade100.withOpacity(0.5); 
+
+    final Color activeFillColor = Colors.green.shade600; 
+    final Color activeContentColor = Colors.white;
+
     return OutlinedButton.icon(
-      onPressed: () {},
+      onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        foregroundColor: mainGreenColor,
-        backgroundColor: fillColor,
+        foregroundColor: isActive ? activeContentColor : mainGreenColor,
+        backgroundColor: isActive ? activeFillColor : fillColor,
         side: BorderSide(color: mainGreenColor, width: 1.5),
         shape: const StadiumBorder(),
         padding: const EdgeInsets.symmetric(vertical: 12.0),
@@ -296,4 +335,3 @@ Widget _buildDetailRow(BuildContext context, IconData icon, String text) {
     );
   }
 }
-  

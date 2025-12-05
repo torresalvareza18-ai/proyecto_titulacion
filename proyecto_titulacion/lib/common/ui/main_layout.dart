@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:proyecto_titulacion/features/alerts/ui/screen-alerts/Screen_alerts.dart';
+import 'package:proyecto_titulacion/features/bookmarkPost/ui/bookmark_list.dart';
 
 import 'package:proyecto_titulacion/features/posts/ui/posts_list/posts_list_page.dart';
 import 'package:proyecto_titulacion/features/perfil/ui/screen_perfil/screen_perfil.dart';
@@ -59,7 +60,7 @@ class _NavigationMenuState extends State<NavigationMenu> {
       ),
       body: <Widget>[
         const PostsListPage(),
-        const Center(child: Text('perfil')),
+        const BookmarkList(),
         const AlertsScreen(),
         const ProfileScreen(),
       ][currentPageIndex],
