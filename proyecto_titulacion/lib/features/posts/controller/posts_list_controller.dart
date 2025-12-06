@@ -3,60 +3,86 @@ import 'dart:async';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:path/path.dart';
 import 'package:proyecto_titulacion/features/posts/data/posts_repository.dart';
+import 'package:proyecto_titulacion/features/posts/service/posts_api_service.dart' hide PaginatedResult;
 import 'package:proyecto_titulacion/models/ModelProvider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:proyecto_titulacion/features/posts/service/posts_api_service.dart' hide PaginatedResult;
 
 part 'posts_list_controller.g.dart';
 
 @riverpod
 class PostsListController extends _$PostsListController {
+  String? _nextToken;
+  bool _hasMore = true;
+  String _tagName = '';
 
+  @override
+  FutureOr<List<Post>> build() async {
+    return [];
+  }
 
- Future<List<Post>> _fetchPosts() async {
-   final postsRepository = ref.read(postsRepositoryProvider);
-   final posts = await postsRepository.getPosts();
-   return posts;
- }
+  Future<void> loadFirstPage(String tagName) async {
+    _tagName = tagName;
+    _nextToken = null;
+    _hasMore = true;
 
- @override
- FutureOr<List<Post>> build() async {
-   return _fetchPosts();
- }
+    state = const AsyncValue.loading();
 
- /*Future<void> removePost(Post post) async {
-   state = const AsyncValue.loading();
-   state = await AsyncValue.guard(() async {
-     final postsRepository = ref.read(postsRepositoryProvider);
-     await postsRepository.delete(post);
-
-     return _fetchPosts();
-   });
- }*/
-
- /*Future<void> updatePost({
-  required Post originalPost,
-  required String title,
-  required String description,
-  required List<DateTime> dates,
-  required List<String> tags,
-  String? newImageKey,
- }) async {
-  final parsedDate = dates.map((d) => TemporalDate(d)).toList();
-  final updatePost = originalPost.copyWith(
-    title: title,
-    description: description,
-    dates: parsedDate,
-    tags: tags,
-    images: newImageKey != null ? [newImageKey] : originalPost.images,
-    updatedAt: TemporalDateTime.now(),
-  );
-  state = const AsyncValue.loading();
-
-    state = await AsyncValue.guard(() async {
+    try {
       final postsRepository = ref.read(postsRepositoryProvider);
-      await postsRepository.update(updatePost); 
+      final result = await postsRepository.getPostsByTagPaginated(
+        tagName: tagName,
+        nextToken: null,
+      );
 
-      return _fetchPosts(); 
-    });
- }*/
+      _hasMore = result.hasNextPage;
+      state = AsyncValue.data(result.items);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+
+  Future<void> loadNextPage() async {
+    if (!_hasMore || state.isLoading) return;
+
+    final currentState = state;
+    if (!currentState.hasValue) return;
+
+    try {
+
+      final postsRepository = ref.read(postsRepositoryProvider);
+      final result = await postsRepository.getPostsByTagPaginated(
+        tagName: _tagName,
+        nextToken: _nextToken,
+      );
+
+      _nextToken = result.nextToken;
+      _hasMore = result.hasNextPage;
+
+      state = AsyncValue.data([
+        ...currentState.value!,
+        ...result.items,
+      ]);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+
+  bool get hasMore => _hasMore;
+}
+
+@riverpod
+class TagListController extends _$TagListController {
+  
+  Future<List<TagCatalog>> getAllTagCatalogs() async {
+    final postsRepository = ref.read(postsRepositoryProvider);
+    return postsRepository.getAllTagCatalogs();
+  }
+
+  @override
+  FutureOr<List<TagCatalog>> build() async {
+    return getAllTagCatalogs();
+  }
+  
+  
 }

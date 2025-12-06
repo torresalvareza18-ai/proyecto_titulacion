@@ -26,3 +26,10 @@ type PostTag @model @auth(rules: [{ allow: public }]) {
     createdAt: AWSDateTime! 
     updatedAt: AWSDateTime! 
 }
+
+type TagCatalog @model @auth(rules: [{ allow: public }]) {
+  id: ID!
+  label: String!      # El texto que se muestra (Ej: "Eventos")
+  value: String!      # El valor interno para tu lógica (Ej: "eventos")
+  iconName: String    # El nombre del icono (Ej: "calendar_today")
+}

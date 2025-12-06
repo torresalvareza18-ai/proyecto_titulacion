@@ -12,7 +12,7 @@ class TripsPlannerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      routerConfig: router, // <--- AQUI EL CAMBIO
+      routerConfig: router, 
     );
   }
 }
