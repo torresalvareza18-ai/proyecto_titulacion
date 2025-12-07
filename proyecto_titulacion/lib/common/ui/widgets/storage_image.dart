@@ -22,7 +22,7 @@ class StorageImage extends StatefulWidget {
   State<StorageImage> createState() => _StorageImageState();
 }
 
-class _StorageImageState extends State<StorageImage> {
+class _StorageImageState extends State<StorageImage> with AutomaticKeepAliveClientMixin {
   String? _downloadUrl;
   bool _isLoading = true;
   bool _hasError = false;
@@ -32,6 +32,9 @@ class _StorageImageState extends State<StorageImage> {
     super.initState();
     _getUrl();
   }
+
+  @override
+  bool get wantKeepAlive => true;
 
   Future<void> _getUrl() async {
     try {

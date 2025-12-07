@@ -28,7 +28,6 @@ import 'package:collection/collection.dart';
 class Post extends amplify_core.Model {
   static const classType = const _PostModelType();
   final String id;
-  final String? ___typename;
   final amplify_core.TemporalDateTime? _createdAt;
   final amplify_core.TemporalDateTime? _updatedAt;
   final String? _title;
@@ -52,19 +51,6 @@ class Post extends amplify_core.Model {
       return PostModelIdentifier(
         id: id
       );
-  }
-  
-  String get __typename {
-    try {
-      return ___typename!;
-    } catch(e) {
-      throw amplify_core.AmplifyCodeGenModelException(
-          amplify_core.AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
-          recoverySuggestion:
-            amplify_core.AmplifyExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion,
-          underlyingException: e.toString()
-          );
-    }
   }
   
   amplify_core.TemporalDateTime get createdAt {
@@ -138,12 +124,11 @@ class Post extends amplify_core.Model {
     return _images;
   }
   
-  const Post._internal({required this.id, required __typename, required createdAt, required updatedAt, required title, description, dates, authorName, authorFamily, post_id, post_url, tags, images}): ___typename = __typename, _createdAt = createdAt, _updatedAt = updatedAt, _title = title, _description = description, _dates = dates, _authorName = authorName, _authorFamily = authorFamily, _post_id = post_id, _post_url = post_url, _tags = tags, _images = images;
+  const Post._internal({required this.id, required createdAt, required updatedAt, required title, description, dates, authorName, authorFamily, post_id, post_url, tags, images}): _createdAt = createdAt, _updatedAt = updatedAt, _title = title, _description = description, _dates = dates, _authorName = authorName, _authorFamily = authorFamily, _post_id = post_id, _post_url = post_url, _tags = tags, _images = images;
   
-  factory Post({String? id, required String __typename, required amplify_core.TemporalDateTime createdAt, required amplify_core.TemporalDateTime updatedAt, required String title, String? description, String? dates, String? authorName, String? authorFamily, String? post_id, String? post_url, String? tags, List<String>? images}) {
+  factory Post({String? id, required amplify_core.TemporalDateTime createdAt, required amplify_core.TemporalDateTime updatedAt, required String title, String? description, String? dates, String? authorName, String? authorFamily, String? post_id, String? post_url, String? tags, List<String>? images}) {
     return Post._internal(
       id: id == null ? amplify_core.UUID.getUUID() : id,
-      __typename: __typename,
       createdAt: createdAt,
       updatedAt: updatedAt,
       title: title,
@@ -166,7 +151,6 @@ class Post extends amplify_core.Model {
     if (identical(other, this)) return true;
     return other is Post &&
       id == other.id &&
-      ___typename == other.___typename &&
       _createdAt == other._createdAt &&
       _updatedAt == other._updatedAt &&
       _title == other._title &&
@@ -189,7 +173,6 @@ class Post extends amplify_core.Model {
     
     buffer.write("Post {");
     buffer.write("id=" + "$id" + ", ");
-    buffer.write("__typename=" + "$___typename" + ", ");
     buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
     buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null") + ", ");
     buffer.write("title=" + "$_title" + ", ");
@@ -206,10 +189,9 @@ class Post extends amplify_core.Model {
     return buffer.toString();
   }
   
-  Post copyWith({String? __typename, amplify_core.TemporalDateTime? createdAt, amplify_core.TemporalDateTime? updatedAt, String? title, String? description, String? dates, String? authorName, String? authorFamily, String? post_id, String? post_url, String? tags, List<String>? images}) {
+  Post copyWith({amplify_core.TemporalDateTime? createdAt, amplify_core.TemporalDateTime? updatedAt, String? title, String? description, String? dates, String? authorName, String? authorFamily, String? post_id, String? post_url, String? tags, List<String>? images}) {
     return Post._internal(
       id: id,
-      __typename: __typename ?? this.__typename,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       title: title ?? this.title,
@@ -224,7 +206,6 @@ class Post extends amplify_core.Model {
   }
   
   Post copyWithModelFieldValues({
-    ModelFieldValue<String>? __typename,
     ModelFieldValue<amplify_core.TemporalDateTime>? createdAt,
     ModelFieldValue<amplify_core.TemporalDateTime>? updatedAt,
     ModelFieldValue<String>? title,
@@ -239,7 +220,6 @@ class Post extends amplify_core.Model {
   }) {
     return Post._internal(
       id: id,
-      __typename: __typename == null ? this.__typename : __typename.value,
       createdAt: createdAt == null ? this.createdAt : createdAt.value,
       updatedAt: updatedAt == null ? this.updatedAt : updatedAt.value,
       title: title == null ? this.title : title.value,
@@ -256,7 +236,6 @@ class Post extends amplify_core.Model {
   
   Post.fromJson(Map<String, dynamic> json)  
     : id = json['id'],
-      ___typename = json['__typename'],
       _createdAt = json['createdAt'] != null ? amplify_core.TemporalDateTime.fromString(json['createdAt']) : null,
       _updatedAt = json['updatedAt'] != null ? amplify_core.TemporalDateTime.fromString(json['updatedAt']) : null,
       _title = json['title'],
@@ -270,12 +249,11 @@ class Post extends amplify_core.Model {
       _images = json['images']?.cast<String>();
   
   Map<String, dynamic> toJson() => {
-    'id': id, '__typename': ___typename, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format(), 'title': _title, 'description': _description, 'dates': _dates, 'authorName': _authorName, 'authorFamily': _authorFamily, 'post_id': _post_id, 'post_url': _post_url, 'tags': _tags, 'images': _images
+    'id': id, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format(), 'title': _title, 'description': _description, 'dates': _dates, 'authorName': _authorName, 'authorFamily': _authorFamily, 'post_id': _post_id, 'post_url': _post_url, 'tags': _tags, 'images': _images
   };
   
   Map<String, Object?> toMap() => {
     'id': id,
-    '__typename': ___typename,
     'createdAt': _createdAt,
     'updatedAt': _updatedAt,
     'title': _title,
@@ -291,7 +269,6 @@ class Post extends amplify_core.Model {
 
   static final amplify_core.QueryModelIdentifier<PostModelIdentifier> MODEL_IDENTIFIER = amplify_core.QueryModelIdentifier<PostModelIdentifier>();
   static final ID = amplify_core.QueryField(fieldName: "id");
-  static final __TYPENAME = amplify_core.QueryField(fieldName: "__typename");
   static final CREATEDAT = amplify_core.QueryField(fieldName: "createdAt");
   static final UPDATEDAT = amplify_core.QueryField(fieldName: "updatedAt");
   static final TITLE = amplify_core.QueryField(fieldName: "title");
@@ -319,12 +296,6 @@ class Post extends amplify_core.Model {
     ];
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.id());
-    
-    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: Post.__TYPENAME,
-      isRequired: true,
-      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
-    ));
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
       key: Post.CREATEDAT,

@@ -1,3 +1,4 @@
+import 'dart:convert'; // Importación necesaria para jsonDecode
 import 'package:device_calendar/device_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -5,14 +6,14 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter/widgets.dart';
 import 'package:proyecto_titulacion/common/ui/widgets/storage_image.dart';
 import 'package:proyecto_titulacion/features/posts/controller/posts_list_controller.dart';
-import 'package:device_calendar/device_calendar.dart';
 import 'package:proyecto_titulacion/models/Post.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 
 class Normal_post extends StatefulWidget {
   final Post post;
-  const Normal_post({super.key, required this.post, required int index});
+  // Añadimos el índice si es necesario, aunque no se usa en el build
+  const Normal_post({super.key, required this.post, required int index}); 
 
   @override
   State<Normal_post> createState() => _normal_postState();
@@ -26,75 +27,111 @@ class _normal_postState extends State<Normal_post> {
     initializeDateFormatting('es');
   }
 
-  @override
-  Widget build(BuildContext context) {
+  // FUNCIÓN CORREGIDA: Decodifica JSON y guarda en el calendario
+  Future<void> _guardarEnCalendarioNativo(Post post) async {
+    if (post.dates == null || post.dates!.isEmpty) return;
 
-    final post = widget.post;
-
-    Future<void> _guardarEnCalendarioNativo(Post post) async {
-      if (post.dates == null || post.dates!.isEmpty) return;
-
-      final DeviceCalendarPlugin _deviceCalendarPlugin = DeviceCalendarPlugin();
-
-      //Pedir permisos a don celular
-      var permissionsGranted = await _deviceCalendarPlugin.hasPermissions();
-      if (permissionsGranted.isSuccess && !permissionsGranted.data!) {
-        permissionsGranted = await _deviceCalendarPlugin.requestPermissions();
-        if (!permissionsGranted.isSuccess || !permissionsGranted.data!) {
-          print("El usuario denego el permiso");
-          return;
-        }
-      }
-    
-      //Obtner el calendario por defecto
-      final calendarsResult = await _deviceCalendarPlugin.retrieveCalendars();
-      final calendar = calendarsResult.data?.firstWhere(
-        (c) => c.isDefault == true && c.isReadOnly == false,
-        orElse: () => calendarsResult.data!.first,
+    // 1. Decodificar la cadena (AWSJSON) a una lista de Strings
+    List<String> dateStrings;
+    try {
+      dateStrings = (jsonDecode(post.dates!) as List).cast<String>();
+    } catch (e) {
+      print("Error decodificando post.dates como JSON: $e");
+      // Muestra un mensaje al usuario si el formato de fecha es incorrecto
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Error: El formato de las fechas no es válido."))
       );
+      return;
+    }
+    
+    // Si la lista está vacía después de la decodificación
+    if (dateStrings.isEmpty) return;
 
-      if (calendar == null) {
+    final DeviceCalendarPlugin _deviceCalendarPlugin = DeviceCalendarPlugin();
+
+    // Pedir permisos
+    var permissionsGranted = await _deviceCalendarPlugin.hasPermissions();
+    if (permissionsGranted.isSuccess && !permissionsGranted.data!) {
+      permissionsGranted = await _deviceCalendarPlugin.requestPermissions();
+      if (!permissionsGranted.isSuccess || !permissionsGranted.data!) {
+        print("El usuario denegó el permiso");
+        return;
+      }
+    }
+  
+    // Obtener el calendario por defecto
+    final calendarsResult = await _deviceCalendarPlugin.retrieveCalendars();
+    final calendar = calendarsResult.data?.firstWhere(
+      (c) => c.isDefault == true && c.isReadOnly == false,
+      orElse: () => calendarsResult.data!.first,
+    );
+
+    if (calendar == null) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Calendario no encontrado"))
         );
       }
-
-      //Guardar las fechas
-      for (var dateTemporal in post.dates!) {
-        final fecha = DateTime.parse(dateTemporal.toString());
-        final event = Event(
-          calendar?.id,
-          title: "Evento: ${post.title}",
-          description: post.description,
-          start: tz.TZDateTime.from(fecha, tz.local),
-          end: tz.TZDateTime.from(fecha.add(const Duration(hours: 2)), tz.local),
-          allDay: true,
-        );
-
-        final result = await _deviceCalendarPlugin.createOrUpdateEvent(event);
-
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Fechas guardadas en tu calendario"))
-        );
-      }
-
+      return;
     }
 
-    String formatDate(String dateString) {
-      try {
-        initializeDateFormatting('es'); 
-        
-        DateTime date = DateTime.parse(dateString);
-        String formatted = DateFormat("EEEE d 'de' MMMM", 'es').format(date);
-        
-        return "${formatted[0].toUpperCase()}${formatted.substring(1)}";
-      } catch (e) {
-        return dateString; 
-      }
+    // 3. Iterar sobre las fechas decodificadas
+    for (var dateTemporal in dateStrings) {
+      // dateTemporal es ahora un String de fecha (ej: "2025-12-01")
+      final fecha = DateTime.parse(dateTemporal);
+      
+      final event = Event(
+        calendar?.id,
+        title: "Evento: ${post.title}",
+        description: post.description,
+        start: tz.TZDateTime.from(fecha, tz.local),
+        end: tz.TZDateTime.from(fecha.add(const Duration(hours: 2)), tz.local),
+        allDay: true,
+      );
+
+      final result = await _deviceCalendarPlugin.createOrUpdateEvent(event);
+      // Puedes añadir aquí lógica de manejo de errores de creación de eventos
     }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Fechas guardadas en tu calendario"))
+      );
+    }
+  }
+
+  // FUNCIÓN CORREGIDA: Maneja el String JSON y extrae la primera fecha
+  String formatDate(String? datesJsonString) {
+    if (datesJsonString == null || datesJsonString.isEmpty) return "Fecha no disponible";
+    
+    String dateString = datesJsonString; // Inicialmente usamos el string crudo
+
+    try {
+      // Intentar decodificar y obtener la primera fecha
+      final List<String> dateStrings = (jsonDecode(datesJsonString) as List).cast<String>();
+      if (dateStrings.isNotEmpty) {
+        dateString = dateStrings.first;
+      }
+    } catch (e) {
+      // Si falla la decodificación, usamos el string crudo
+      print("Error decodificando JSON para mostrar la fecha: $e");
+    }
+
+    try {
+      initializeDateFormatting('es'); 
+      DateTime date = DateTime.parse(dateString);
+      String formatted = DateFormat("EEEE d 'de' MMMM", 'es').format(date);
+      return "${formatted[0].toUpperCase()}${formatted.substring(1)}";
+    } catch (e) {
+      // Si falla el parseo de la fecha (ej: no es ISO 8601)
+      return dateString; 
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
+    final post = widget.post;
 
     final Color primaryGreen = Colors.green;
     final Color lightGreenBackground = const Color(0xFFE8F5E9);
@@ -136,7 +173,8 @@ class _normal_postState extends State<Normal_post> {
                     ),
                   ),
                   Text(
-                    'Eventos',
+                    // Asumimos que authorFamily es la fuente
+                    post.authorFamily ?? 'Fuente Desconocida', 
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.green[700],
@@ -158,7 +196,8 @@ class _normal_postState extends State<Normal_post> {
           ),
           const SizedBox(height: 8),
           Text(
-            post.description,
+            // CORRECCIÓN: Manejo de nulo en description
+            post.description ?? 'No se proporcionó descripción.',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[800],
@@ -171,7 +210,8 @@ class _normal_postState extends State<Normal_post> {
             _buildDetailRow(
               context, 
               Icons.calendar_today, 
-              formatDate(post.dates!.first.toString()), 
+              // CORRECCIÓN: Pasar el String JSON a la función
+              formatDate(post.dates), 
             ),
           const SizedBox(height: 8),
           _buildDetailRow(
@@ -222,15 +262,16 @@ class _normal_postState extends State<Normal_post> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: _buildActionButton(Icons.favorite_border, 'Me Gusta'),
+                  child: _buildActionButton(Icons.favorite_border, 'Me Gusta', () {}),
                 ),
                 const SizedBox(width: 10), 
                 Expanded(
-                  child: _buildActionButton(Icons.bookmark_border, 'Guardar'),
+                  child: _buildActionButton(Icons.bookmark_border, 'Guardar', () {}),
                 ),
                 const SizedBox(width: 10), 
                 Expanded(
-                  child: _buildActionButton(Icons.calendar_today, 'Agendar'),
+                  // CORRECCIÓN: Llamar a la función de guardado en el botón
+                  child: _buildActionButton(Icons.calendar_today, 'Agendar', () => _guardarEnCalendarioNativo(post)),
                 ),
             ],
           ),
@@ -268,11 +309,13 @@ Widget _buildDetailRow(BuildContext context, IconData icon, String text) {
   );
 }
 
-  Widget _buildActionButton(IconData icon, String text) {
+// CORRECCIÓN: Añadir el argumento onTap
+  Widget _buildActionButton(IconData icon, String text, VoidCallback onTap) { 
     final Color mainGreenColor = Colors.green.shade600; 
     final Color fillColor = Colors.green.shade100.withOpacity(0.5); 
     return OutlinedButton.icon(
-      onPressed: () {},
+      // CORRECCIÓN: Usar el onTap recibido
+      onPressed: onTap, 
       style: OutlinedButton.styleFrom(
         foregroundColor: mainGreenColor,
         backgroundColor: fillColor,
@@ -296,4 +339,3 @@ Widget _buildDetailRow(BuildContext context, IconData icon, String text) {
     );
   }
 }
-  

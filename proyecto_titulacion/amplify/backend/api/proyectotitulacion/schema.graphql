@@ -2,10 +2,8 @@
 # all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/cli/graphql/authorization-rules
 input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONLY!
 
-
 type Post @model @auth(rules: [{ allow: public }]) {
   id: ID!
-  __typename: String!
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
   
@@ -38,3 +36,44 @@ type TagCatalog @model @auth(rules: [{ allow: public }]) {
   value: String!      # El valor interno para tu lógica (Ej: "eventos")
   iconName: String    # El nombre del icono (Ej: "calendar_today")
 }
+
+type Notifications @model @auth(rules: [{ allow: public }]) {
+  id: ID! 
+  title: String!
+  userId: ID! @index(name: "byUser", sortKeyFields: ["createdAt"])
+  body: String!
+  relatedPostId: String
+  isRead: Boolean! @default(value: "false")
+  type: String!
+  createdAt: AWSDateTime! 
+  updatedAt: AWSDateTime! 
+}
+
+type User @model @auth(rules: [
+  { allow: owner, operations: [create, read, update] },
+  { allow: public, operations: [read] }
+  ]) 
+{
+  id: ID!
+  email: String!
+  name: String
+  avatarUrl: String
+  preferences: [String]
+  fcmToken: String
+  snsEndpointsArn: String
+  subscriptionArn: String
+  createdAt: AWSDateTime! 
+  updatedAt: AWSDateTime! 
+  notifications: [Notifications] @hasMany(indexName: "byUser", fields: ["id"])
+}
+
+
+type UserSavedPost @model @auth(rules: [{ allow: public }]) {
+  id: ID!
+  userId: ID!
+  postId: ID!
+  createdAt: AWSDateTime! 
+  updatedAt: AWSDateTime! 
+  post : Post @hasOne(fields: ["postId"])
+}
+

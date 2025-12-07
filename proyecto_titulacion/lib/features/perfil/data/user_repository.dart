@@ -1,5 +1,8 @@
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:proyecto_titulacion/features/perfil/service/user_api_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:proyecto_titulacion/models/User.dart';
 
 final userRepositoryProvider = Provider<UserRepository>((ref) {
   final userAPIService = ref.read(userAPIServiceProvider);
@@ -11,23 +14,34 @@ class UserRepository {
 
   UserRepository(this._apiService);
 
-  // LECTURA: Obtiene el email y luego busca las preferencias en la nube.
   Future<List<String>> fetchUserPreferences() async {
     final userEmail = await _apiService.getCurrentUserEmail();
     return _apiService.fetchPreferencesByEmail(userEmail);
   }
   
-  // ESCRITURA: Lógica para obtener el ID de usuario (necesario para la mutación) y guardar.
-  // [UserRepository.dart]
 
   Future<void> saveUserPreferences(List<String> newPreferences) async {
-    // 1. Obtener el email del usuario logeado
-    final userEmail = await _apiService.getCurrentUserEmail(); // <-- Llamada directa al APIService.Auth
-    
-    // 2. Buscar el ID del usuario en DynamoDB usando el email
+    final userEmail = await _apiService.getCurrentUserEmail(); 
     final userId = await _apiService.getUserIdByEmail(userEmail);
     
-    // 3. Usar el ID real para realizar la mutación
     await _apiService.updatePreferences(userId, newPreferences);
-}
+  }
+
+  Future<Map<String, dynamic>> getUserPreferencesByEmail() async {
+
+    final userEmail = await _apiService.getCurrentUserEmail(); 
+    final userId = await _apiService.getUserIdByEmail(userEmail);
+    final userData = await _apiService.getUserById(userId);
+
+    print('la user data de repository es: ${userData}');
+
+    return {
+      "id": userData["id"],
+      "email": userData["email"],
+      "name": userData["name"],
+      "preferences": userData["preferences"],   
+    };
+  }
+
+  void operator [](String other) {}
 }

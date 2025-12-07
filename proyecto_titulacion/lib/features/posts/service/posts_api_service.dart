@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:amplify_api/amplify_api.dart';
-import 'package:amplify_core/amplify_core.dart'; // <-- ¡Asegúrate que esta línea esté presente!
+import 'package:amplify_core/amplify_core.dart'; 
 import 'package:proyecto_titulacion/models/ModelProvider.dart';
+
+import 'package:amplify_storage_s3/amplify_storage_s3.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final postsAPIServiceProvider = Provider<PostsAPIService>((ref) {
@@ -17,7 +19,7 @@ class PostsAPIService {
 
   Future<List<Post>> getPosts() async {
     try {
-      final request = ModelQueries.list(Post.classType, where: Post.TYPE.eq("Post"),);
+      final request = ModelQueries.list(Post.classType);
       final response = await Amplify.API.query(request: request).response;
 
       final posts = response.data?.items.whereType<Post>().toList() ?? [];
@@ -32,11 +34,22 @@ class PostsAPIService {
   }
 
   Future<PostTagPage> getPostTagsPaginated({
-    required String tagName,
+    required List<String> preferences,
     String? nextToken,
     int limit = 20,
   }) async {
-    final bool showAll = tagName == "todos";
+    final bool showAll = preferences.isEmpty;
+
+    print('Las preferencias son: ${preferences}');
+
+    String buildFilter(List<String> preferences) {
+      if (preferences.isEmpty) return '';
+      final orFilters =
+          preferences.map((tag) => '{ tagName: { eq: "$tag" } }').join(', ');
+      return 'filter: { or: [ $orFilters ] }';
+    }
+
+    final filterString = buildFilter(preferences);
 
     final document = showAll
         ? '''
@@ -55,9 +68,9 @@ class PostsAPIService {
           }
         '''
         : '''
-          query ListPostTagsFiltered(\$tagName: String!, \$limit: Int, \$nextToken: String) {
+          query ListPostTagsFiltered(\$limit: Int, \$nextToken: String) {
             listPostTags(
-              filter: { tagName: { eq: \$tagName } },
+              $filterString,
               limit: \$limit,
               nextToken: \$nextToken
             ) {
@@ -71,45 +84,56 @@ class PostsAPIService {
           }
         ''';
 
-    final variables = showAll
-        ? {
-            "limit": limit,
-            "nextToken": nextToken,
-          }
-        : {
-            "tagName": tagName,
-            "limit": limit,
-            "nextToken": nextToken,
-          };
+    final variables = {
+      "limit": limit,
+      "nextToken": nextToken,
+    };
 
     final request = GraphQLRequest(
       document: document,
       variables: variables,
     );
 
-    final response = await Amplify.API.query(request: request).response;
+    print('Documento GraphQL:\n$document');
+    print('Variables:\n$variables');
 
-    final Map<String, dynamic> json = jsonDecode(response.data);
-    final data = json['listPostTags'];
+    try {
+      final response = await Amplify.API.query(request: request).response;
+      print('Response raw: ${response.data}');
 
-    if (data == null) return PostTagPage(items: [], nextToken: null);
+      if (response.data == null) {
+        safePrint('No se obtuvieron datos: ${response.errors}');
+        return PostTagPage(items: [], nextToken: null);
+      }
 
-    final items = (data['items'] as List)
-        .map((json) => PostTag.fromJson(Map<String, dynamic>.from(json)))
-        .toList();
+      final Map<String, dynamic> json = jsonDecode(response.data);
+      final data = json['listPostTags'];
 
-    return PostTagPage(items: items, nextToken: data['nextToken']);
+      print('la data transforamda es ${data}');
+
+      if (data == null) return PostTagPage(items: [], nextToken: null);
+
+      final items = (data['items'] as List)
+          .map((json) => PostTag.fromJson(Map<String, dynamic>.from(json)))
+          .toList();
+
+      print('Los items son: ${items}');
+
+      return PostTagPage(items: items, nextToken: data['nextToken']);
+    } catch (e) {
+      safePrint('ERROR getPostTagsPaginated: $e');
+      return PostTagPage(items: [], nextToken: null);
+    }
   }
 
-
   Future<PaginatedResult<Post>> getPostsByTagPaginated({
-    required String tagName,
+    required List<String> preferences,
     required String? nextToken, 
     int limit = 20,
   }) async {
     try {
       final tagPage = await getPostTagsPaginated(
-        tagName: tagName,
+        preferences: preferences,
         nextToken: nextToken,
         limit: limit,
       );
@@ -174,6 +198,19 @@ class PostsAPIService {
       safePrint('getAllTagCatalogs failed: $error');
 
       return [];
+    }
+  }
+
+  Future<String> getAmplifyImageUrl(String imageKey) async {
+    try {
+      final result = await Amplify.Storage.getUrl(
+        key: imageKey,
+        options: const StorageGetUrlOptions(accessLevel: StorageAccessLevel.guest), 
+      ).result;
+      return result.url.toString();
+    } on StorageException catch (e) {
+      safePrint('Error al obtener URL de Amplify: ${e.message}');
+      return ''; 
     }
   }
 }
