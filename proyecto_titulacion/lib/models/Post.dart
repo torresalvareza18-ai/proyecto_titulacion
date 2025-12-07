@@ -28,18 +28,18 @@ import 'package:collection/collection.dart';
 class Post extends amplify_core.Model {
   static const classType = const _PostModelType();
   final String id;
-  final String? _type;
-  final String? _title;
-  final String? _description;
-  final List<String>? _images;
-  final List<String>? _tags;
-  final List<amplify_core.TemporalDate>? _dates;
+  final String? ___typename;
   final amplify_core.TemporalDateTime? _createdAt;
   final amplify_core.TemporalDateTime? _updatedAt;
-  final String? _authorId;
+  final String? _title;
+  final String? _description;
+  final String? _dates;
   final String? _authorName;
-  final String? _authorMiddle;
   final String? _authorFamily;
+  final String? _post_id;
+  final String? _post_url;
+  final String? _tags;
+  final List<String>? _images;
 
   @override
   getInstanceType() => classType;
@@ -54,13 +54,9 @@ class Post extends amplify_core.Model {
       );
   }
   
-  String? get type {
-    return _type;
-  }
-  
-  String get title {
+  String get __typename {
     try {
-      return _title!;
+      return ___typename!;
     } catch(e) {
       throw amplify_core.AmplifyCodeGenModelException(
           amplify_core.AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
@@ -69,31 +65,6 @@ class Post extends amplify_core.Model {
           underlyingException: e.toString()
           );
     }
-  }
-  
-  String get description {
-    try {
-      return _description!;
-    } catch(e) {
-      throw amplify_core.AmplifyCodeGenModelException(
-          amplify_core.AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
-          recoverySuggestion:
-            amplify_core.AmplifyExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion,
-          underlyingException: e.toString()
-          );
-    }
-  }
-  
-  List<String>? get images {
-    return _images;
-  }
-  
-  List<String>? get tags {
-    return _tags;
-  }
-  
-  List<amplify_core.TemporalDate>? get dates {
-    return _dates;
   }
   
   amplify_core.TemporalDateTime get createdAt {
@@ -122,9 +93,9 @@ class Post extends amplify_core.Model {
     }
   }
   
-  String get authorId {
+  String get title {
     try {
-      return _authorId!;
+      return _title!;
     } catch(e) {
       throw amplify_core.AmplifyCodeGenModelException(
           amplify_core.AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
@@ -135,35 +106,55 @@ class Post extends amplify_core.Model {
     }
   }
   
-  String? get authorName {
-    return _authorName;
+  String? get description {
+    return _description;
   }
   
-  String? get authorMiddle {
-    return _authorMiddle;
+  String? get dates {
+    return _dates;
+  }
+  
+  String? get authorName {
+    return _authorName;
   }
   
   String? get authorFamily {
     return _authorFamily;
   }
   
-  const Post._internal({required this.id, type, required title, required description, images, tags, dates, required createdAt, required updatedAt, required authorId, authorName, authorMiddle, authorFamily}): _type = type, _title = title, _description = description, _images = images, _tags = tags, _dates = dates, _createdAt = createdAt, _updatedAt = updatedAt, _authorId = authorId, _authorName = authorName, _authorMiddle = authorMiddle, _authorFamily = authorFamily;
+  String? get post_id {
+    return _post_id;
+  }
   
-  factory Post({String? id, String? type, required String title, required String description, List<String>? images, List<String>? tags, List<amplify_core.TemporalDate>? dates, required amplify_core.TemporalDateTime createdAt, required amplify_core.TemporalDateTime updatedAt, required String authorId, String? authorName, String? authorMiddle, String? authorFamily}) {
+  String? get post_url {
+    return _post_url;
+  }
+  
+  String? get tags {
+    return _tags;
+  }
+  
+  List<String>? get images {
+    return _images;
+  }
+  
+  const Post._internal({required this.id, required __typename, required createdAt, required updatedAt, required title, description, dates, authorName, authorFamily, post_id, post_url, tags, images}): ___typename = __typename, _createdAt = createdAt, _updatedAt = updatedAt, _title = title, _description = description, _dates = dates, _authorName = authorName, _authorFamily = authorFamily, _post_id = post_id, _post_url = post_url, _tags = tags, _images = images;
+  
+  factory Post({String? id, required String __typename, required amplify_core.TemporalDateTime createdAt, required amplify_core.TemporalDateTime updatedAt, required String title, String? description, String? dates, String? authorName, String? authorFamily, String? post_id, String? post_url, String? tags, List<String>? images}) {
     return Post._internal(
       id: id == null ? amplify_core.UUID.getUUID() : id,
-      type: type,
-      title: title,
-      description: description,
-      images: images != null ? List<String>.unmodifiable(images) : images,
-      tags: tags != null ? List<String>.unmodifiable(tags) : tags,
-      dates: dates != null ? List<amplify_core.TemporalDate>.unmodifiable(dates) : dates,
+      __typename: __typename,
       createdAt: createdAt,
       updatedAt: updatedAt,
-      authorId: authorId,
+      title: title,
+      description: description,
+      dates: dates,
       authorName: authorName,
-      authorMiddle: authorMiddle,
-      authorFamily: authorFamily);
+      authorFamily: authorFamily,
+      post_id: post_id,
+      post_url: post_url,
+      tags: tags,
+      images: images != null ? List<String>.unmodifiable(images) : images);
   }
   
   bool equals(Object other) {
@@ -175,18 +166,18 @@ class Post extends amplify_core.Model {
     if (identical(other, this)) return true;
     return other is Post &&
       id == other.id &&
-      _type == other._type &&
-      _title == other._title &&
-      _description == other._description &&
-      DeepCollectionEquality().equals(_images, other._images) &&
-      DeepCollectionEquality().equals(_tags, other._tags) &&
-      DeepCollectionEquality().equals(_dates, other._dates) &&
+      ___typename == other.___typename &&
       _createdAt == other._createdAt &&
       _updatedAt == other._updatedAt &&
-      _authorId == other._authorId &&
+      _title == other._title &&
+      _description == other._description &&
+      _dates == other._dates &&
       _authorName == other._authorName &&
-      _authorMiddle == other._authorMiddle &&
-      _authorFamily == other._authorFamily;
+      _authorFamily == other._authorFamily &&
+      _post_id == other._post_id &&
+      _post_url == other._post_url &&
+      _tags == other._tags &&
+      DeepCollectionEquality().equals(_images, other._images);
   }
   
   @override
@@ -198,120 +189,120 @@ class Post extends amplify_core.Model {
     
     buffer.write("Post {");
     buffer.write("id=" + "$id" + ", ");
-    buffer.write("type=" + "$_type" + ", ");
-    buffer.write("title=" + "$_title" + ", ");
-    buffer.write("description=" + "$_description" + ", ");
-    buffer.write("images=" + (_images != null ? _images!.toString() : "null") + ", ");
-    buffer.write("tags=" + (_tags != null ? _tags!.toString() : "null") + ", ");
-    buffer.write("dates=" + (_dates != null ? _dates!.toString() : "null") + ", ");
+    buffer.write("__typename=" + "$___typename" + ", ");
     buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
     buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null") + ", ");
-    buffer.write("authorId=" + "$_authorId" + ", ");
+    buffer.write("title=" + "$_title" + ", ");
+    buffer.write("description=" + "$_description" + ", ");
+    buffer.write("dates=" + "$_dates" + ", ");
     buffer.write("authorName=" + "$_authorName" + ", ");
-    buffer.write("authorMiddle=" + "$_authorMiddle" + ", ");
-    buffer.write("authorFamily=" + "$_authorFamily");
+    buffer.write("authorFamily=" + "$_authorFamily" + ", ");
+    buffer.write("post_id=" + "$_post_id" + ", ");
+    buffer.write("post_url=" + "$_post_url" + ", ");
+    buffer.write("tags=" + "$_tags" + ", ");
+    buffer.write("images=" + (_images != null ? _images!.toString() : "null"));
     buffer.write("}");
     
     return buffer.toString();
   }
   
-  Post copyWith({String? type, String? title, String? description, List<String>? images, List<String>? tags, List<amplify_core.TemporalDate>? dates, amplify_core.TemporalDateTime? createdAt, amplify_core.TemporalDateTime? updatedAt, String? authorId, String? authorName, String? authorMiddle, String? authorFamily}) {
+  Post copyWith({String? __typename, amplify_core.TemporalDateTime? createdAt, amplify_core.TemporalDateTime? updatedAt, String? title, String? description, String? dates, String? authorName, String? authorFamily, String? post_id, String? post_url, String? tags, List<String>? images}) {
     return Post._internal(
       id: id,
-      type: type ?? this.type,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      images: images ?? this.images,
-      tags: tags ?? this.tags,
-      dates: dates ?? this.dates,
+      __typename: __typename ?? this.__typename,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      authorId: authorId ?? this.authorId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      dates: dates ?? this.dates,
       authorName: authorName ?? this.authorName,
-      authorMiddle: authorMiddle ?? this.authorMiddle,
-      authorFamily: authorFamily ?? this.authorFamily);
+      authorFamily: authorFamily ?? this.authorFamily,
+      post_id: post_id ?? this.post_id,
+      post_url: post_url ?? this.post_url,
+      tags: tags ?? this.tags,
+      images: images ?? this.images);
   }
   
   Post copyWithModelFieldValues({
-    ModelFieldValue<String?>? type,
-    ModelFieldValue<String>? title,
-    ModelFieldValue<String>? description,
-    ModelFieldValue<List<String>?>? images,
-    ModelFieldValue<List<String>?>? tags,
-    ModelFieldValue<List<amplify_core.TemporalDate>?>? dates,
+    ModelFieldValue<String>? __typename,
     ModelFieldValue<amplify_core.TemporalDateTime>? createdAt,
     ModelFieldValue<amplify_core.TemporalDateTime>? updatedAt,
-    ModelFieldValue<String>? authorId,
+    ModelFieldValue<String>? title,
+    ModelFieldValue<String?>? description,
+    ModelFieldValue<String?>? dates,
     ModelFieldValue<String?>? authorName,
-    ModelFieldValue<String?>? authorMiddle,
-    ModelFieldValue<String?>? authorFamily
+    ModelFieldValue<String?>? authorFamily,
+    ModelFieldValue<String?>? post_id,
+    ModelFieldValue<String?>? post_url,
+    ModelFieldValue<String?>? tags,
+    ModelFieldValue<List<String>?>? images
   }) {
     return Post._internal(
       id: id,
-      type: type == null ? this.type : type.value,
-      title: title == null ? this.title : title.value,
-      description: description == null ? this.description : description.value,
-      images: images == null ? this.images : images.value,
-      tags: tags == null ? this.tags : tags.value,
-      dates: dates == null ? this.dates : dates.value,
+      __typename: __typename == null ? this.__typename : __typename.value,
       createdAt: createdAt == null ? this.createdAt : createdAt.value,
       updatedAt: updatedAt == null ? this.updatedAt : updatedAt.value,
-      authorId: authorId == null ? this.authorId : authorId.value,
+      title: title == null ? this.title : title.value,
+      description: description == null ? this.description : description.value,
+      dates: dates == null ? this.dates : dates.value,
       authorName: authorName == null ? this.authorName : authorName.value,
-      authorMiddle: authorMiddle == null ? this.authorMiddle : authorMiddle.value,
-      authorFamily: authorFamily == null ? this.authorFamily : authorFamily.value
+      authorFamily: authorFamily == null ? this.authorFamily : authorFamily.value,
+      post_id: post_id == null ? this.post_id : post_id.value,
+      post_url: post_url == null ? this.post_url : post_url.value,
+      tags: tags == null ? this.tags : tags.value,
+      images: images == null ? this.images : images.value
     );
   }
   
   Post.fromJson(Map<String, dynamic> json)  
     : id = json['id'],
-      _type = json['type'],
-      _title = json['title'],
-      _description = json['description'],
-      _images = json['images']?.cast<String>(),
-      _tags = json['tags']?.cast<String>(),
-      _dates = (json['dates'] as List?)?.map((e) => amplify_core.TemporalDate.fromString(e)).toList(),
+      ___typename = json['__typename'],
       _createdAt = json['createdAt'] != null ? amplify_core.TemporalDateTime.fromString(json['createdAt']) : null,
       _updatedAt = json['updatedAt'] != null ? amplify_core.TemporalDateTime.fromString(json['updatedAt']) : null,
-      _authorId = json['authorId'],
+      _title = json['title'],
+      _description = json['description'],
+      _dates = json['dates'],
       _authorName = json['authorName'],
-      _authorMiddle = json['authorMiddle'],
-      _authorFamily = json['authorFamily'];
+      _authorFamily = json['authorFamily'],
+      _post_id = json['post_id'],
+      _post_url = json['post_url'],
+      _tags = json['tags'],
+      _images = json['images']?.cast<String>();
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'type': _type, 'title': _title, 'description': _description, 'images': _images, 'tags': _tags, 'dates': _dates?.map((e) => e.format()).toList(), 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format(), 'authorId': _authorId, 'authorName': _authorName, 'authorMiddle': _authorMiddle, 'authorFamily': _authorFamily
+    'id': id, '__typename': ___typename, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format(), 'title': _title, 'description': _description, 'dates': _dates, 'authorName': _authorName, 'authorFamily': _authorFamily, 'post_id': _post_id, 'post_url': _post_url, 'tags': _tags, 'images': _images
   };
   
   Map<String, Object?> toMap() => {
     'id': id,
-    'type': _type,
-    'title': _title,
-    'description': _description,
-    'images': _images,
-    'tags': _tags,
-    'dates': _dates,
+    '__typename': ___typename,
     'createdAt': _createdAt,
     'updatedAt': _updatedAt,
-    'authorId': _authorId,
+    'title': _title,
+    'description': _description,
+    'dates': _dates,
     'authorName': _authorName,
-    'authorMiddle': _authorMiddle,
-    'authorFamily': _authorFamily
+    'authorFamily': _authorFamily,
+    'post_id': _post_id,
+    'post_url': _post_url,
+    'tags': _tags,
+    'images': _images
   };
 
   static final amplify_core.QueryModelIdentifier<PostModelIdentifier> MODEL_IDENTIFIER = amplify_core.QueryModelIdentifier<PostModelIdentifier>();
   static final ID = amplify_core.QueryField(fieldName: "id");
-  static final TYPE = amplify_core.QueryField(fieldName: "type");
-  static final TITLE = amplify_core.QueryField(fieldName: "title");
-  static final DESCRIPTION = amplify_core.QueryField(fieldName: "description");
-  static final IMAGES = amplify_core.QueryField(fieldName: "images");
-  static final TAGS = amplify_core.QueryField(fieldName: "tags");
-  static final DATES = amplify_core.QueryField(fieldName: "dates");
+  static final __TYPENAME = amplify_core.QueryField(fieldName: "__typename");
   static final CREATEDAT = amplify_core.QueryField(fieldName: "createdAt");
   static final UPDATEDAT = amplify_core.QueryField(fieldName: "updatedAt");
-  static final AUTHORID = amplify_core.QueryField(fieldName: "authorId");
+  static final TITLE = amplify_core.QueryField(fieldName: "title");
+  static final DESCRIPTION = amplify_core.QueryField(fieldName: "description");
+  static final DATES = amplify_core.QueryField(fieldName: "dates");
   static final AUTHORNAME = amplify_core.QueryField(fieldName: "authorName");
-  static final AUTHORMIDDLE = amplify_core.QueryField(fieldName: "authorMiddle");
   static final AUTHORFAMILY = amplify_core.QueryField(fieldName: "authorFamily");
+  static final POST_ID = amplify_core.QueryField(fieldName: "post_id");
+  static final POST_URL = amplify_core.QueryField(fieldName: "post_url");
+  static final TAGS = amplify_core.QueryField(fieldName: "tags");
+  static final IMAGES = amplify_core.QueryField(fieldName: "images");
   static var schema = amplify_core.Model.defineSchema(define: (amplify_core.ModelSchemaDefinition modelSchemaDefinition) {
     modelSchemaDefinition.name = "Post";
     modelSchemaDefinition.pluralName = "Posts";
@@ -327,49 +318,12 @@ class Post extends amplify_core.Model {
         ])
     ];
     
-    modelSchemaDefinition.indexes = [
-      amplify_core.ModelIndex(fields: const ["type", "createdAt"], name: "postsByDate")
-    ];
-    
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.id());
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: Post.TYPE,
-      isRequired: false,
-      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
-    ));
-    
-    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: Post.TITLE,
+      key: Post.__TYPENAME,
       isRequired: true,
       ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
-    ));
-    
-    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: Post.DESCRIPTION,
-      isRequired: true,
-      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
-    ));
-    
-    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: Post.IMAGES,
-      isRequired: false,
-      isArray: true,
-      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.collection, ofModelName: amplify_core.ModelFieldTypeEnum.string.name)
-    ));
-    
-    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: Post.TAGS,
-      isRequired: false,
-      isArray: true,
-      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.collection, ofModelName: amplify_core.ModelFieldTypeEnum.string.name)
-    ));
-    
-    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: Post.DATES,
-      isRequired: false,
-      isArray: true,
-      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.collection, ofModelName: amplify_core.ModelFieldTypeEnum.date.name)
     ));
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
@@ -385,8 +339,20 @@ class Post extends amplify_core.Model {
     ));
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: Post.AUTHORID,
+      key: Post.TITLE,
       isRequired: true,
+      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
+      key: Post.DESCRIPTION,
+      isRequired: false,
+      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
+      key: Post.DATES,
+      isRequired: false,
       ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
     ));
     
@@ -397,15 +363,34 @@ class Post extends amplify_core.Model {
     ));
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: Post.AUTHORMIDDLE,
+      key: Post.AUTHORFAMILY,
       isRequired: false,
       ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: Post.AUTHORFAMILY,
+      key: Post.POST_ID,
       isRequired: false,
       ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
+      key: Post.POST_URL,
+      isRequired: false,
+      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
+      key: Post.TAGS,
+      isRequired: false,
+      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
+      key: Post.IMAGES,
+      isRequired: false,
+      isArray: true,
+      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.collection, ofModelName: amplify_core.ModelFieldTypeEnum.string.name)
     ));
   });
 }

@@ -30,7 +30,7 @@ export 'TagCatalog.dart';
 
 class ModelProvider implements amplify_core.ModelProviderInterface {
   @override
-  String version = "28574cb374098acaf6cd6b7e64583df1";
+  String version = "b57867ab81a0e40d1689e64c97288a87";
   @override
   List<amplify_core.ModelSchema> modelSchemas = [Post.schema, PostTag.schema, TagCatalog.schema];
   @override
