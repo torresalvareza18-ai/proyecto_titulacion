@@ -42,13 +42,21 @@ class _NavigationMenuState extends State<NavigationMenu> {
             ),
             const SizedBox(width: 8),
             const Text(
-              'TABLON-QUETZAL',
+              'TABLON-',
+              style: TextStyle(
+                color: Colors.orangeAccent,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+            const Text(
+              'QUETZAL',
               style: TextStyle(
                 color: Color(0xFF4CAF50),
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
               ),
-            ),
+            )
           ],
         ), 
         actions: [
@@ -64,38 +72,57 @@ class _NavigationMenuState extends State<NavigationMenu> {
         const AlertsScreen(),
         const ProfileScreen(),
       ][currentPageIndex],
-      bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (int index) {
-          setState(() {
-            currentPageIndex = index;
-          });
-        },
-        indicatorColor: Colors.green,
-        selectedIndex: currentPageIndex,
-        destinations: const <Widget>[
-          NavigationDestination(
-            selectedIcon: Icon(Icons.home),
-            icon: Icon(Icons.home_outlined), 
-            label: 'Home',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Icons.bookmark),
-            icon: Icon(Icons.bookmark_border), 
-            label: 'Guardados',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Icons.notifications),
-            icon: Icon(Icons.notifications_none), 
-            label: 'Alertas',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Icons.person),
-            icon: Icon(Icons.person_outline), 
-            label: 'Perfil',
-          ),
-         
-        ]
-      ),
+      bottomNavigationBar: NavigationBarTheme(
+
+        data: NavigationBarThemeData( 
+          indicatorColor: Colors.transparent,
+          iconTheme: MaterialStateProperty.resolveWith((states) {
+            return IconThemeData(
+              color: Colors.green[800], 
+              size: 24,
+            );
+          }),
+          labelTextStyle: MaterialStateProperty.resolveWith((states) {
+            if (states.contains(MaterialState.selected)) {
+              return TextStyle(color: Colors.green[800], fontWeight: FontWeight.bold);
+            }
+            return TextStyle(color: Colors.green[800]);
+          }),
+        ),
+        
+        child: NavigationBar(
+          selectedIndex: currentPageIndex,
+          onDestinationSelected: (int index) {
+            setState(() {
+              currentPageIndex = index;
+            });
+          },
+          surfaceTintColor: Colors.transparent,
+          indicatorColor: Colors.orangeAccent,
+          destinations: const <Widget>[
+            NavigationDestination(
+              selectedIcon: Icon(Icons.home),
+              icon: Icon(Icons.home_outlined), 
+              label: 'Home',
+            ),
+            NavigationDestination(
+              selectedIcon: Icon(Icons.bookmark),
+              icon: Icon(Icons.bookmark_border), 
+              label: 'Guardados',
+            ),
+            NavigationDestination(
+              selectedIcon: Icon(Icons.notifications),
+              icon: Icon(Icons.notifications_none), 
+              label: 'Alertas',
+            ),
+            NavigationDestination(
+              selectedIcon: Icon(Icons.person),
+              icon: Icon(Icons.person_outline), 
+              label: 'Perfil',
+            ),
+          ]
+        ),
+      )
     );
   }
 
@@ -105,7 +132,7 @@ class _NavigationMenuState extends State<NavigationMenu> {
       width: 40,
       height: 40,
       decoration: const BoxDecoration(
-        color: Color(0xFFA5F2C6),
+        color: Colors.orangeAccent,
         shape: BoxShape.circle,
       ),
       child: IconButton(

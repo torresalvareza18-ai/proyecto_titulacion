@@ -51,7 +51,7 @@ class PreferenciasContenidoScreen extends ConsumerWidget {
             child: Text(
               'Preferencias de Contenido:',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 25,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF388E3C),
               ),
@@ -77,7 +77,7 @@ class PreferenciasContenidoScreen extends ConsumerWidget {
                     ref.read(userPreferencesControllerProvider.notifier)
                        .updatePreference(tag.value, newValue);
                   },
-                  activeColor: Color(0xFF388E3C),
+                  activeColor: Colors.orangeAccent,
                 );
               },
             ),

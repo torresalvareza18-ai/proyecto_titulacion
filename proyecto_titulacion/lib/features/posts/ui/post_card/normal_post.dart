@@ -8,8 +8,10 @@ import 'package:proyecto_titulacion/models/Post.dart';
 import 'package:proyecto_titulacion/common/ui/widgets/storage_image.dart';
 import 'package:proyecto_titulacion/common/ui/widgets/amplify_video_player.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:proyecto_titulacion/features/bookmarkPost/controller/bookmark_controller.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class Normal_post extends ConsumerWidget {
+class Normal_post extends ConsumerStatefulWidget {
   final Post post;
   final int index;
 
@@ -19,41 +21,87 @@ class Normal_post extends ConsumerWidget {
     required this.index,
   });
 
+  @override
+  ConsumerState<Normal_post> createState() => _NormalPostState();
+}
+
+class _NormalPostState extends ConsumerState<Normal_post> {
+  bool? _localSaved;
+
   static const Color _cardBackgroundColor = Color(0xFFE8F5E9);
   static const Color _chipBackgroundColor = Color(0xFFFFF9C4);
   static final Color _textColor = Colors.green[800]!;
+
+  @override
+  void initState() {
+    super.initState();
+    initializeDateFormatting('es_ES', null);
+  }
 
   bool _isVideo(String filename) {
     final ext = filename.split('.').last.toLowerCase();
     return ['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(ext);
   }
 
-  Widget _buildMediaContent(String mediaKey) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: _isVideo(mediaKey)
-          ? Container(
-              color: Colors.black,
-              constraints: const BoxConstraints(maxHeight: 400),
-              child: AmplifyVideoPlayer(storageKey: mediaKey),
-            )
-          : Container(
-              color: Colors.grey[200],
-              constraints: const BoxConstraints(maxHeight: 400),
-              width: double.infinity,
-              child: StorageImage(
-                key:  ValueKey(post.images!.first),
-                    imageKey: post.images!.first,
-                    fit: BoxFit.cover,
-              ),
-            ),
+  Future<void> _guardarEnCalendarioNativo(Post post) async {
+    if (post.dates == null || post.dates!.isEmpty) return;
+
+    final DeviceCalendarPlugin deviceCalendarPlugin = DeviceCalendarPlugin();
+
+    var permissionsGranted = await deviceCalendarPlugin.hasPermissions();
+    if (permissionsGranted.isSuccess && !permissionsGranted.data!) {
+      permissionsGranted = await deviceCalendarPlugin.requestPermissions();
+      if (!permissionsGranted.isSuccess || !permissionsGranted.data!) {
+        return;
+      }
+    }
+
+    final calendarsResult = await deviceCalendarPlugin.retrieveCalendars();
+    final calendar = calendarsResult.data?.firstWhere(
+      (c) => c.isDefault == true && c.isReadOnly == false,
+      orElse: () => calendarsResult.data!.first,
     );
+
+    if (calendar == null) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Calendario no encontrado")));
+      return;
+    }
+
+    List<dynamic> dateList = [];
+    try {
+      final dynamic decoded = jsonDecode(post.dates!);
+      if (decoded is List) dateList = decoded;
+      else if (decoded is String) dateList = [decoded];
+    } catch (e) {
+      dateList = [post.dates!]; 
+    }
+
+    for (var dateString in dateList) {
+      final DateTime? fecha = DateTime.tryParse(dateString.toString());
+      if (fecha != null) {
+        final event = Event(
+          calendar.id,
+          title: "Evento: ${post.title}",
+          description: post.description,
+          start: tz.TZDateTime.from(fecha, tz.local),
+          end: tz.TZDateTime.from(fecha.add(const Duration(hours: 2)), tz.local),
+          allDay: true,
+        );
+        await deviceCalendarPlugin.createOrUpdateEvent(event);
+      }
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Fechas guardadas en tu calendario"))
+      );
+    }
   }
 
   String _getFormattedDate() {
-    if (post.dates == null || post.dates!.isEmpty) return "Próximamente";
+    if (widget.post.dates == null || widget.post.dates!.isEmpty) return "Próximamente";
     try {
-      final dynamic decoded = jsonDecode(post.dates!);
+      final dynamic decoded = jsonDecode(widget.post.dates!);
       String dateStr;
       if (decoded is List && decoded.isNotEmpty) {
         dateStr = decoded.first.toString();
@@ -69,16 +117,35 @@ class Normal_post extends ConsumerWidget {
       }
       return dateStr;
     } catch (e) {
-      return post.dates!;
+      return widget.post.dates!;
     }
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final post = widget.post;
+
+    final logo = post.authorFamily;
+
+    final socialStyles = <String, ({IconData icon, Color color})>{
+      'Facebook': (icon: FontAwesomeIcons.facebookF, color: const Color(0xFF1877F2)),
+      'Instagram': (icon: FontAwesomeIcons.instagram, color: const Color(0xFFE1306C)),
+      'Pagina Administrador': (icon: FontAwesomeIcons.envelope, color: Colors.black),
+    };
+
+    final style = socialStyles[post.authorFamily];
+    
+    final bookmarkAsync = ref.watch(myBookmarksListProvider);
+    bool backendSaved = bookmarkAsync.maybeWhen(
+      data: (lista) => lista.any((item) => item?.postId == post.id),
+      orElse: () => false, 
+    );
+
+    bool isSaved = _localSaved ?? backendSaved;
+
     final String? mediaKey = (post.images != null && post.images!.isNotEmpty)
         ? post.images![0]
         : null;
-    
 
     return Card(
       color: _cardBackgroundColor,
@@ -96,12 +163,21 @@ class Normal_post extends ConsumerWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.blue[800],
-                    borderRadius: BorderRadius.circular(8),
-                    image: const DecorationImage(
-                        image: AssetImage('assets/images/icon_placeholder.png'),
-                        fit: BoxFit.cover
-                    )
+                    color: style?.color ?? Colors.grey,
+                    borderRadius: BorderRadius.circular(90),
+                  ),
+                  child: Center(
+                    child: style != null 
+                      ? FaIcon(style.icon, color: Colors.white, size: 20)
+                      : Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(90),
+                            image: const DecorationImage(
+                              image: AssetImage('images/amplify.png'),
+                              fit: BoxFit.cover
+                            )
+                          ),
+                        ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -109,11 +185,11 @@ class Normal_post extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                      Text(
-                      "Facebook: UPIICSA",
+                      '${post.authorFamily} : ${post.authorName}',
                       style: TextStyle(fontWeight: FontWeight.bold, color: _textColor, fontSize: 16),
                     ),
                     Text(
-                      "Eventos",
+                      "${post.tags}",
                       style: TextStyle(color: _textColor, fontWeight: FontWeight.w500),
                     ),
                   ],
@@ -136,32 +212,72 @@ class Normal_post extends ConsumerWidget {
             const SizedBox(height: 16),
 
             _buildInfoChip(Icons.calendar_today, _getFormattedDate()),
-            _buildInfoChip(Icons.access_time, "09:00 AM - 09:00AM"),
-            _buildInfoChip(Icons.location_on, "Edificio Culturales, Auditorio A"),
-            _buildInfoChip(Icons.people, "189 Interesados"),
             const SizedBox(height: 16),
 
             if (mediaKey != null)
               _buildMediaContent(mediaKey),
 
             const SizedBox(height: 12),
-
-            Text(
-              "234 Me Gusta",
-              style: TextStyle(fontWeight: FontWeight.bold, color: _textColor),
-            ),
-            const SizedBox(height: 12),
+            
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildActionButton(Icons.favorite_border, "Me Gusta", () {}),
-                _buildActionButton(Icons.bookmark_border, "Guardar", () {}),
-                _buildActionButton(Icons.calendar_today, "Agendar", () {}),
+                Expanded(
+                  child: _buildActionButton(
+                    isSaved ? Icons.bookmark : Icons.bookmark_border,
+                    isSaved ? 'Guardado' : 'Guardar',
+                    () {
+                      setState(() {
+                        _localSaved = !isSaved;
+                      });
+
+                      final notifier = ref.read(bookmarkSaveControllerProvider.notifier);
+                      if (isSaved) {
+                        notifier.removeBookmark(postId: post.id);
+                      } else {
+                        notifier.saveBookmark(postId: post.id);
+                      }
+                    },
+                    isActive: isSaved,
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                Expanded(
+                  child: _buildActionButton(
+                    Icons.calendar_month, 
+                    'Agendar', 
+                    () => _guardarEnCalendarioNativo(post),
+                    isActive: false
+                  ),
+                ),
               ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildMediaContent(String mediaKey) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: _isVideo(mediaKey)
+          ? Container(
+              color: Colors.black,
+              constraints: const BoxConstraints(maxHeight: 400),
+              child: AmplifyVideoPlayer(storageKey: mediaKey),
+            )
+          : Container(
+              color: Colors.grey[200],
+              constraints: const BoxConstraints(maxHeight: 400),
+              width: double.infinity,
+              child: StorageImage(
+                key: ValueKey(mediaKey),
+                imageKey: mediaKey,
+                fit: BoxFit.cover,
+              ),
+            ),
     );
   }
 
@@ -189,17 +305,25 @@ class Normal_post extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionButton(IconData icon, String label, VoidCallback onPressed) {
+  Widget _buildActionButton(IconData icon, String label, VoidCallback onPressed, {bool isActive = false}) {
     return OutlinedButton.icon(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        foregroundColor: _textColor,
+        foregroundColor: isActive ? Colors.white : _textColor,
+        backgroundColor: isActive ? _textColor : Colors.transparent,
         side: BorderSide(color: _textColor),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       ),
-      icon: Icon(icon, size: 20, color: _textColor),
-      label: Text(label, style: TextStyle(color: _textColor, fontWeight: FontWeight.bold)),
+      icon: Icon(icon, size: 20, color: isActive ? Colors.white : _textColor),
+      label: Text(
+        label, 
+        style: TextStyle(
+          color: isActive ? Colors.white : _textColor, 
+          fontWeight: FontWeight.bold,
+          fontSize: 13
+        )
+      ),
     );
   }
 }
