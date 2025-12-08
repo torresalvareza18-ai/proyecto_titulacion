@@ -3,7 +3,6 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:proyecto_titulacion/features/bookmarkPost/service/bookmark_api_service.dart';
-import 'package:proyecto_titulacion/models/Post.dart';
 import 'package:proyecto_titulacion/models/UserSavedPost.dart';
 
 final bookmarkRepositoryProvider = Provider<BookmarkRepository>((ref) {

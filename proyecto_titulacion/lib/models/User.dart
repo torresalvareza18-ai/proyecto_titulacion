@@ -33,6 +33,7 @@ class User extends amplify_core.Model {
   final String? _avatarUrl;
   final List<String>? _preferences;
   final String? _fcmToken;
+  final String? _owner;
   final String? _snsEndpointsArn;
   final String? _subscriptionArn;
   final amplify_core.TemporalDateTime? _createdAt;
@@ -81,6 +82,10 @@ class User extends amplify_core.Model {
     return _fcmToken;
   }
   
+  String? get owner {
+    return _owner;
+  }
+  
   String? get snsEndpointsArn {
     return _snsEndpointsArn;
   }
@@ -119,9 +124,9 @@ class User extends amplify_core.Model {
     return _notifications;
   }
   
-  const User._internal({required this.id, required email, name, avatarUrl, preferences, fcmToken, snsEndpointsArn, subscriptionArn, required createdAt, required updatedAt, notifications}): _email = email, _name = name, _avatarUrl = avatarUrl, _preferences = preferences, _fcmToken = fcmToken, _snsEndpointsArn = snsEndpointsArn, _subscriptionArn = subscriptionArn, _createdAt = createdAt, _updatedAt = updatedAt, _notifications = notifications;
+  const User._internal({required this.id, required email, name, avatarUrl, preferences, fcmToken, owner, snsEndpointsArn, subscriptionArn, required createdAt, required updatedAt, notifications}): _email = email, _name = name, _avatarUrl = avatarUrl, _preferences = preferences, _fcmToken = fcmToken, _owner = owner, _snsEndpointsArn = snsEndpointsArn, _subscriptionArn = subscriptionArn, _createdAt = createdAt, _updatedAt = updatedAt, _notifications = notifications;
   
-  factory User({String? id, required String email, String? name, String? avatarUrl, List<String>? preferences, String? fcmToken, String? snsEndpointsArn, String? subscriptionArn, required amplify_core.TemporalDateTime createdAt, required amplify_core.TemporalDateTime updatedAt, List<Notifications>? notifications}) {
+  factory User({String? id, required String email, String? name, String? avatarUrl, List<String>? preferences, String? fcmToken, String? owner, String? snsEndpointsArn, String? subscriptionArn, required amplify_core.TemporalDateTime createdAt, required amplify_core.TemporalDateTime updatedAt, List<Notifications>? notifications}) {
     return User._internal(
       id: id == null ? amplify_core.UUID.getUUID() : id,
       email: email,
@@ -129,6 +134,7 @@ class User extends amplify_core.Model {
       avatarUrl: avatarUrl,
       preferences: preferences != null ? List<String>.unmodifiable(preferences) : preferences,
       fcmToken: fcmToken,
+      owner: owner,
       snsEndpointsArn: snsEndpointsArn,
       subscriptionArn: subscriptionArn,
       createdAt: createdAt,
@@ -150,6 +156,7 @@ class User extends amplify_core.Model {
       _avatarUrl == other._avatarUrl &&
       DeepCollectionEquality().equals(_preferences, other._preferences) &&
       _fcmToken == other._fcmToken &&
+      _owner == other._owner &&
       _snsEndpointsArn == other._snsEndpointsArn &&
       _subscriptionArn == other._subscriptionArn &&
       _createdAt == other._createdAt &&
@@ -171,6 +178,7 @@ class User extends amplify_core.Model {
     buffer.write("avatarUrl=" + "$_avatarUrl" + ", ");
     buffer.write("preferences=" + (_preferences != null ? _preferences!.toString() : "null") + ", ");
     buffer.write("fcmToken=" + "$_fcmToken" + ", ");
+    buffer.write("owner=" + "$_owner" + ", ");
     buffer.write("snsEndpointsArn=" + "$_snsEndpointsArn" + ", ");
     buffer.write("subscriptionArn=" + "$_subscriptionArn" + ", ");
     buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
@@ -180,7 +188,7 @@ class User extends amplify_core.Model {
     return buffer.toString();
   }
   
-  User copyWith({String? email, String? name, String? avatarUrl, List<String>? preferences, String? fcmToken, String? snsEndpointsArn, String? subscriptionArn, amplify_core.TemporalDateTime? createdAt, amplify_core.TemporalDateTime? updatedAt, List<Notifications>? notifications}) {
+  User copyWith({String? email, String? name, String? avatarUrl, List<String>? preferences, String? fcmToken, String? owner, String? snsEndpointsArn, String? subscriptionArn, amplify_core.TemporalDateTime? createdAt, amplify_core.TemporalDateTime? updatedAt, List<Notifications>? notifications}) {
     return User._internal(
       id: id,
       email: email ?? this.email,
@@ -188,6 +196,7 @@ class User extends amplify_core.Model {
       avatarUrl: avatarUrl ?? this.avatarUrl,
       preferences: preferences ?? this.preferences,
       fcmToken: fcmToken ?? this.fcmToken,
+      owner: owner ?? this.owner,
       snsEndpointsArn: snsEndpointsArn ?? this.snsEndpointsArn,
       subscriptionArn: subscriptionArn ?? this.subscriptionArn,
       createdAt: createdAt ?? this.createdAt,
@@ -201,6 +210,7 @@ class User extends amplify_core.Model {
     ModelFieldValue<String?>? avatarUrl,
     ModelFieldValue<List<String>?>? preferences,
     ModelFieldValue<String?>? fcmToken,
+    ModelFieldValue<String?>? owner,
     ModelFieldValue<String?>? snsEndpointsArn,
     ModelFieldValue<String?>? subscriptionArn,
     ModelFieldValue<amplify_core.TemporalDateTime>? createdAt,
@@ -214,6 +224,7 @@ class User extends amplify_core.Model {
       avatarUrl: avatarUrl == null ? this.avatarUrl : avatarUrl.value,
       preferences: preferences == null ? this.preferences : preferences.value,
       fcmToken: fcmToken == null ? this.fcmToken : fcmToken.value,
+      owner: owner == null ? this.owner : owner.value,
       snsEndpointsArn: snsEndpointsArn == null ? this.snsEndpointsArn : snsEndpointsArn.value,
       subscriptionArn: subscriptionArn == null ? this.subscriptionArn : subscriptionArn.value,
       createdAt: createdAt == null ? this.createdAt : createdAt.value,
@@ -229,6 +240,7 @@ class User extends amplify_core.Model {
       _avatarUrl = json['avatarUrl'],
       _preferences = json['preferences']?.cast<String>(),
       _fcmToken = json['fcmToken'],
+      _owner = json['owner'],
       _snsEndpointsArn = json['snsEndpointsArn'],
       _subscriptionArn = json['subscriptionArn'],
       _createdAt = json['createdAt'] != null ? amplify_core.TemporalDateTime.fromString(json['createdAt']) : null,
@@ -248,7 +260,7 @@ class User extends amplify_core.Model {
           : null);
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'email': _email, 'name': _name, 'avatarUrl': _avatarUrl, 'preferences': _preferences, 'fcmToken': _fcmToken, 'snsEndpointsArn': _snsEndpointsArn, 'subscriptionArn': _subscriptionArn, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format(), 'notifications': _notifications?.map((Notifications? e) => e?.toJson()).toList()
+    'id': id, 'email': _email, 'name': _name, 'avatarUrl': _avatarUrl, 'preferences': _preferences, 'fcmToken': _fcmToken, 'owner': _owner, 'snsEndpointsArn': _snsEndpointsArn, 'subscriptionArn': _subscriptionArn, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format(), 'notifications': _notifications?.map((Notifications? e) => e?.toJson()).toList()
   };
   
   Map<String, Object?> toMap() => {
@@ -258,6 +270,7 @@ class User extends amplify_core.Model {
     'avatarUrl': _avatarUrl,
     'preferences': _preferences,
     'fcmToken': _fcmToken,
+    'owner': _owner,
     'snsEndpointsArn': _snsEndpointsArn,
     'subscriptionArn': _subscriptionArn,
     'createdAt': _createdAt,
@@ -272,6 +285,7 @@ class User extends amplify_core.Model {
   static final AVATARURL = amplify_core.QueryField(fieldName: "avatarUrl");
   static final PREFERENCES = amplify_core.QueryField(fieldName: "preferences");
   static final FCMTOKEN = amplify_core.QueryField(fieldName: "fcmToken");
+  static final OWNER = amplify_core.QueryField(fieldName: "owner");
   static final SNSENDPOINTSARN = amplify_core.QueryField(fieldName: "snsEndpointsArn");
   static final SUBSCRIPTIONARN = amplify_core.QueryField(fieldName: "subscriptionArn");
   static final CREATEDAT = amplify_core.QueryField(fieldName: "createdAt");
@@ -293,6 +307,11 @@ class User extends amplify_core.Model {
           amplify_core.ModelOperation.CREATE,
           amplify_core.ModelOperation.READ,
           amplify_core.ModelOperation.UPDATE
+        ]),
+      amplify_core.AuthRule(
+        authStrategy: amplify_core.AuthStrategy.PRIVATE,
+        operations: const [
+          amplify_core.ModelOperation.CREATE
         ]),
       amplify_core.AuthRule(
         authStrategy: amplify_core.AuthStrategy.PUBLIC,
@@ -330,6 +349,12 @@ class User extends amplify_core.Model {
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
       key: User.FCMTOKEN,
+      isRequired: false,
+      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
+      key: User.OWNER,
       isRequired: false,
       ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
     ));

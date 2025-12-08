@@ -6,7 +6,7 @@ part of 'bookmark_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$myBookmarksListHash() => r'2c8307f920776431792bc995655aae21cbdf982c';
+String _$myBookmarksListHash() => r'950bfa70e73b897d3470f0d5e02a9b1194209fcb';
 
 /// See also [myBookmarksList].
 @ProviderFor(myBookmarksList)
@@ -23,7 +23,7 @@ final myBookmarksListProvider =
 
 typedef MyBookmarksListRef = AutoDisposeFutureProviderRef<List<UserSavedPost?>>;
 String _$bookmarkSaveControllerHash() =>
-    r'ee881d11d95880eecf54781292da993f8ac924d2';
+    r'a0bd82571f2373b67a5d9bdb46fb1d550fd9da84';
 
 /// See also [BookmarkSaveController].
 @ProviderFor(BookmarkSaveController)

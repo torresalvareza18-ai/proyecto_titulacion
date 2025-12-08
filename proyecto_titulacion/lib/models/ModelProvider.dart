@@ -36,7 +36,7 @@ export 'UserSavedPost.dart';
 
 class ModelProvider implements amplify_core.ModelProviderInterface {
   @override
-  String version = "a05cd7209dd1ce8fb995783e89ce0d84";
+  String version = "aae11870d0158023d4847b122ae257ed";
   @override
   List<amplify_core.ModelSchema> modelSchemas = [Notifications.schema, Post.schema, PostTag.schema, TagCatalog.schema, User.schema, UserSavedPost.schema];
   @override

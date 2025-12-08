@@ -1,6 +1,5 @@
 import 'package:proyecto_titulacion/features/posts/service/posts_api_service.dart';
 import 'package:proyecto_titulacion/models/ModelProvider.dart';
-import 'package:proyecto_titulacion/models/Post.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final postsRepositoryProvider = Provider<PostsRepository>((ref) {

@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:amplify_api/amplify_api.dart';
-import 'package:amplify_core/amplify_core.dart'; 
+import 'package:amplify_core/amplify_core.dart';
+import 'package:amplify_storage_s3/amplify_storage_s3.dart'; 
 import 'package:proyecto_titulacion/models/ModelProvider.dart';
-
-import 'package:amplify_storage_s3/amplify_storage_s3.dart';
+import 'package:amplify_flutter/amplify_flutter.dart' hide Amplify;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final postsAPIServiceProvider = Provider<PostsAPIService>((ref) {
@@ -23,7 +22,7 @@ class PostsAPIService {
       final response = await Amplify.API.query(request: request).response;
 
       final posts = response.data?.items.whereType<Post>().toList() ?? [];
-      posts.sort((a,b) => b.createdAt!.compareTo(a.createdAt!));
+      posts.sort((a,b) => b.createdAt.compareTo(a.createdAt));
       return posts;
   
     } on Exception catch (error) {
@@ -40,7 +39,7 @@ class PostsAPIService {
   }) async {
     final bool showAll = preferences.isEmpty;
 
-    print('Las preferencias son: ${preferences}');
+    print('Las preferencias son: $preferences');
 
     String buildFilter(List<String> preferences) {
       if (preferences.isEmpty) return '';
@@ -78,6 +77,8 @@ class PostsAPIService {
                 id
                 postId
                 tagName
+                createdAt
+                updatedAt
               }
               nextToken
             }
@@ -108,7 +109,7 @@ class PostsAPIService {
       final Map<String, dynamic> json = jsonDecode(response.data);
       final data = json['listPostTags'];
 
-      print('la data transforamda es ${data}');
+      print('la data transforamda es $data');
 
       if (data == null) return PostTagPage(items: [], nextToken: null);
 
@@ -116,7 +117,7 @@ class PostsAPIService {
           .map((json) => PostTag.fromJson(Map<String, dynamic>.from(json)))
           .toList();
 
-      print('Los items son: ${items}');
+      print('Los items son: $items');
 
       return PostTagPage(items: items, nextToken: data['nextToken']);
     } catch (e) {
@@ -141,7 +142,7 @@ Future<PaginatedResult<Post>> getPostsByTagPaginated({
       // 2. IDs únicos
       final Set<String> uniquePostIds = {};
       for (var tag in tagPage.items) {
-        if (tag.postId != null) uniquePostIds.add(tag.postId!);
+        uniquePostIds.add(tag.postId!);
       }
 
       // 3. Descarga paralela
@@ -315,12 +316,18 @@ Future<PaginatedResult<Post>> getPostsByTagPaginated({
   Future<String> getAmplifyImageUrl(String imageKey) async {
     try {
       final result = await Amplify.Storage.getUrl(
-        key: imageKey,
-        options: const StorageGetUrlOptions(accessLevel: StorageAccessLevel.guest), 
+        key: 'public/${imageKey}',
+        options: const StorageGetUrlOptions(
+          //accessLevel: StorageAccessLevel.guest,
+          pluginOptions: S3GetUrlPluginOptions(
+            validateObjectExistence: true,
+            expiresIn: Duration(days: 1),
+          ),
+        ),
       ).result;
       return result.url.toString();
     } on StorageException catch (e) {
-      safePrint('Error al obtener URL de Amplify: ${e.message}');
+      safePrint('Error al obtener URL: ${e.message}');
       return ''; 
     }
   }
@@ -340,8 +347,6 @@ class PaginatedResult<T> {
     required this.totalItems,
     this.nextToken,
   });
-
-  //String? get nextToken => null;
 }
 
 class PostTagPage {

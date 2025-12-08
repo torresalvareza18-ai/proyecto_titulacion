@@ -37,16 +37,20 @@ class _StorageImageState extends State<StorageImage> with AutomaticKeepAliveClie
   bool get wantKeepAlive => true;
 
   Future<void> _getUrl() async {
+    print(widget.key);
     try {
       final result = await Amplify.Storage.getUrl(
         key: widget.imageKey,
         options: const StorageGetUrlOptions(
+          accessLevel: StorageAccessLevel.guest,
           pluginOptions: S3GetUrlPluginOptions(
             validateObjectExistence: true,
             expiresIn: Duration(days: 1),
           ),
         ),
       ).result;
+
+      print('El print es ${result}');
 
       if (mounted) {
         setState(() {

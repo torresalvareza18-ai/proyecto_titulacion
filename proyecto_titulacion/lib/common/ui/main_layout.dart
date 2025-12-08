@@ -23,6 +23,9 @@ class NavigationMenu extends StatefulWidget {
 
 class _NavigationMenuState extends State<NavigationMenu> {
 
+  bool _mostrarBusqueda = false; 
+  final TextEditingController _searchController = TextEditingController(); 
+
   int currentPageIndex = 0;
 
   @override
@@ -33,34 +36,71 @@ class _NavigationMenuState extends State<NavigationMenu> {
         backgroundColor: Colors.white,
         elevation: 0,
         titleSpacing: 16,
-        title: Row(
-          children: [
-            
-            Image.asset(
-              'images/tablon.png',
-              height: 60,
+        title: _mostrarBusqueda 
+          ? null 
+          : Row(
+              children: [
+                Image.asset(
+                  'images/tablon.png',
+                  height: 60,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'TABLON-',
+                  style: TextStyle(
+                    color: Colors.orangeAccent,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                const Text(
+                  'QUETZAL',
+                  style: TextStyle(
+                    color: Color(0xFF4CAF50),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                )
+              ],
             ),
-            const SizedBox(width: 8),
-            const Text(
-              'TABLON-',
-              style: TextStyle(
-                color: Colors.orangeAccent,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-            const Text(
-              'QUETZAL',
-              style: TextStyle(
-                color: Color(0xFF4CAF50),
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            )
-          ],
-        ), 
         actions: [
-          _buildCircleActionButton(Icons.search, () {}),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: _mostrarBusqueda ? 220 : 0, 
+            height: 40,
+            curve: Curves.easeInOut,
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: _mostrarBusqueda
+                ? TextField(
+                    controller: _searchController,
+                    autofocus: true, 
+                    decoration: const InputDecoration(
+                      hintText: "Buscar...",
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                      isDense: true, 
+                    ),
+                    onChanged: (texto) {
+                      print("Filtrando por: $texto");
+                    },
+                  )
+                : null, 
+          ),
+          _buildCircleActionButton(
+            _mostrarBusqueda ? Icons.close : Icons.search,
+            () {
+              setState(() {
+                _mostrarBusqueda = !_mostrarBusqueda;
+                if (!_mostrarBusqueda) {
+                  _searchController.clear();
+                }
+              });
+            },
+          ),
           const SizedBox(width: 8),
           _buildCircleActionButton(Icons.notifications_none, () {}),
           const SizedBox(width: 16),
@@ -76,14 +116,14 @@ class _NavigationMenuState extends State<NavigationMenu> {
 
         data: NavigationBarThemeData( 
           indicatorColor: Colors.transparent,
-          iconTheme: MaterialStateProperty.resolveWith((states) {
+          iconTheme: WidgetStateProperty.resolveWith((states) {
             return IconThemeData(
               color: Colors.green[800], 
               size: 24,
             );
           }),
-          labelTextStyle: MaterialStateProperty.resolveWith((states) {
-            if (states.contains(MaterialState.selected)) {
+          labelTextStyle: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
               return TextStyle(color: Colors.green[800], fontWeight: FontWeight.bold);
             }
             return TextStyle(color: Colors.green[800]);

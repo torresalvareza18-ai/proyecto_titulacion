@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+ import 'package:flutter/material.dart';
+import 'package:proyecto_titulacion/features/perfil/ui/screen_perfil/button_signOut.dart';
 import 'package:proyecto_titulacion/features/perfil/ui/screen_perfil/card_perfil.dart';
 import 'package:proyecto_titulacion/features/perfil/ui/screen_perfil/cards_preferences.dart';
 import 'package:proyecto_titulacion/features/perfil/ui/screen_perfil/data_cards.dart';
@@ -20,7 +21,11 @@ class ProfileScreen extends StatelessWidget {
             
             SizedBox(height: 20),
 
-            ProfileSettings()
+            ProfileSettings(),
+
+            SizedBox(height: 16),
+
+            button_signout()
           ],
         ),
       ),

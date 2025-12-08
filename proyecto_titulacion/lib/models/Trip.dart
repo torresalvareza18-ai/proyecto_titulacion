@@ -158,12 +158,12 @@ class Trip extends amplify_core.Model {
     buffer.write("id=" + "$id" + ", ");
     buffer.write("tripName=" + "$_tripName" + ", ");
     buffer.write("destination=" + "$_destination" + ", ");
-    buffer.write("startDate=" + (_startDate != null ? _startDate!.format() : "null") + ", ");
-    buffer.write("endDate=" + (_endDate != null ? _endDate!.format() : "null") + ", ");
+    buffer.write("startDate=" + (_startDate != null ? _startDate.format() : "null") + ", ");
+    buffer.write("endDate=" + (_endDate != null ? _endDate.format() : "null") + ", ");
     buffer.write("tripImageUrl=" + "$_tripImageUrl" + ", ");
     buffer.write("tripImageKey=" + "$_tripImageKey" + ", ");
-    buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
-    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
+    buffer.write("createdAt=" + (_createdAt != null ? _createdAt.format() : "null") + ", ");
+    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt.format() : "null"));
     buffer.write("}");
     
     return buffer.toString();

@@ -46,7 +46,7 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
 
   void _handleChipTapped(String newTagName) {
     if (_currentTagName == newTagName) return;
-    safePrint('EL newTagName es ${newTagName}');
+    safePrint('EL newTagName es $newTagName');
     setState(() {
       _currentTagName = newTagName;
     });
@@ -140,7 +140,7 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
       ),
       body: postsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: ${err}')),
+        error: (err, stack) => Center(child: Text('Error: $err')),
         data: (posts) {
           if (posts.isEmpty) {
             return RefreshIndicator(

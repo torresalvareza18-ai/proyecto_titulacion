@@ -2,7 +2,6 @@
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:proyecto_titulacion/features/bookmarkPost/data/bookmark_repository.dart';
-import 'package:proyecto_titulacion/models/Post.dart';
 import 'package:proyecto_titulacion/models/UserSavedPost.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 

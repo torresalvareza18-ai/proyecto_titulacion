@@ -70,8 +70,9 @@ class _NormalPostState extends ConsumerState<Normal_post> {
     List<dynamic> dateList = [];
     try {
       final dynamic decoded = jsonDecode(post.dates!);
-      if (decoded is List) dateList = decoded;
-      else if (decoded is String) dateList = [decoded];
+      if (decoded is List) {
+        dateList = decoded;
+      } else if (decoded is String) dateList = [decoded];
     } catch (e) {
       dateList = [post.dates!]; 
     }

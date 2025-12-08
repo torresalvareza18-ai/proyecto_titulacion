@@ -1,4 +1,5 @@
 import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:amplify_storage_s3/amplify_storage_s3.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -26,9 +27,15 @@ class _AmplifyVideoPlayerState extends State<AmplifyVideoPlayer> {
 
   Future<void> _initializeVideo() async {
     try {
-      // 1. Obtener la URL firmada de S3
       final result = await Amplify.Storage.getUrl(
-        key: widget.storageKey,
+        key: 'public/${widget.storageKey}',
+        options: const StorageGetUrlOptions(
+          //accessLevel: StorageAccessLevel.guest,
+          pluginOptions: S3GetUrlPluginOptions(
+            validateObjectExistence: true,
+            expiresIn: Duration(days: 1),
+          ),
+        ),
       ).result;
       
       final url = result.url;

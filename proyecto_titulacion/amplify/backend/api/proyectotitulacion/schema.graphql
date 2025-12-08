@@ -51,7 +51,9 @@ type Notifications @model @auth(rules: [{ allow: public }]) {
 
 type User @model @auth(rules: [
   { allow: owner, operations: [create, read, update] },
+  { allow: private, operations: [create] },
   { allow: public, operations: [read] }
+  
   ]) 
 {
   id: ID!
@@ -60,6 +62,7 @@ type User @model @auth(rules: [
   avatarUrl: String
   preferences: [String]
   fcmToken: String
+  owner: String
   snsEndpointsArn: String
   subscriptionArn: String
   createdAt: AWSDateTime! 

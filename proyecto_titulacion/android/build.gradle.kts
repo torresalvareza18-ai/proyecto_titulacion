@@ -1,8 +1,15 @@
+plugins {
+    id("com.android.application") version "8.11.1" apply false 
+    id("com.google.gms.google-services") version "4.4.1" apply false 
+    id("org.jetbrains.kotlin.android") version "2.2.20" apply false
+}
+
 allprojects {
     repositories {
         google()
         mavenCentral()
     }
+    
 }
 
 val newBuildDir: Directory =

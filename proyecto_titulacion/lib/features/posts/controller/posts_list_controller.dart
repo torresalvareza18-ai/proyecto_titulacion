@@ -37,10 +37,10 @@ class PostsListController extends _$PostsListController {
       final Map<String, dynamic> userData = await loadUserPreferences.loadUserPreferences();
       final postsRepository = ref.read(postsRepositoryProvider);
 
-      print('el user data es: ${userData}');
+      print('el user data es: $userData');
 
       final List<String> userPreferences = (userData['preferences'] as List).cast<String>();
-      print('el user data es: ${userPreferences}');
+      print('el user data es: $userPreferences');
       final List<String> preferencesToSend;
 
       if (tagName == 'todos') {

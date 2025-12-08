@@ -13,13 +13,13 @@ class UserPreferencesController extends _$UserPreferencesController {
   @override
   FutureOr<List<String>> build() async {
     final userRepository = ref.read(userRepositoryProvider);
-    safePrint('Preferencias del controller: ${userRepository}');
+    safePrint('Preferencias del controller: $userRepository');
     return userRepository.fetchUserPreferences();
   }
   
   Future<void> updatePreference(String tagValue, bool isEnabled) async {
-    print('El tag es: ${tagValue}');
-    print('El tag esta: ${isEnabled}');
+    print('El tag es: $tagValue');
+    print('El tag esta: $isEnabled');
     if (state.hasError || state.value == null) return;
     
     List<String> currentActiveTags = List.from(state.value!);
@@ -46,7 +46,7 @@ class UserPreferencesController extends _$UserPreferencesController {
       final user = ref.read(userRepositoryProvider);
       final userDataMap = await user.getUserPreferencesByEmail();
 
-      print('EL user es: ${userDataMap}');
+      print('EL user es: $userDataMap');
 
       return userDataMap; 
     } catch (e) {

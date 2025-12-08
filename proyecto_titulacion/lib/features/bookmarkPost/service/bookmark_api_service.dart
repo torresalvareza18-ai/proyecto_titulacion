@@ -109,7 +109,7 @@ class BookmarkAPIService {
       for (var item in itemsToDelete) {
         if (item != null) {
           final deleteRequest = ModelMutations.delete(item);
-          await Amplify.API.mutate(request: deleteRequest);
+          Amplify.API.mutate(request: deleteRequest);
         }
       }
 

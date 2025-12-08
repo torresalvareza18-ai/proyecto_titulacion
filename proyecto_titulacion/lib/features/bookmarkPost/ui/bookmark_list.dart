@@ -2,7 +2,6 @@
 
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:proyecto_titulacion/features/bookmarkPost/controller/bookmark_controller.dart';
 import 'package:proyecto_titulacion/features/posts/ui/post_card/normal_post.dart';

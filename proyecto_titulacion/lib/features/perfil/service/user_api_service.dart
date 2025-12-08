@@ -110,9 +110,7 @@ class UserAPIService {
       ).response;
       
 
-      final session = await Amplify.Auth.fetchAuthSession(
-        options: CognitoSessionOptions(getAWSCredentials: true),
-      );
+      final session = await Amplify.Auth.fetchAuthSession();
 
 
     } catch (e) {
@@ -128,15 +126,20 @@ class UserAPIService {
           email
           name
           preferences    
+          fcmToken
+          
         }
       }
     ''';
+
+    print('User id ${userId}');
 
     try {
       final response = await Amplify.API.query(
         request: GraphQLRequest<String>(document: query),
       ).response;
 
+      print('EL response es: ${response}');
 
       if (response.data == null) {
         throw Exception("No se encontró el usuario");
@@ -150,6 +153,49 @@ class UserAPIService {
     } catch (e) {
       safePrint("Error API getUserById: $e");
       rethrow;
+    }
+  }
+
+  Future<void> updateUserRecord(User user) async {
+    try {
+      final request = ModelMutations.update(user);
+      await Amplify.API.mutate(request: request).response;
+      safePrint("User record updated successfully in DataStore/Cloud.");
+    } on DataStoreException catch (e) {
+      safePrint("Error updating user record: $e");
+    }
+  }
+
+  Future<void> saveFCMToken(String token, String userId) async {
+    try {
+      
+      final response = await Amplify.API.mutate(
+        request: GraphQLRequest<String>(
+          document: r'''
+            mutation UpdateUser($input: UpdateUserInput!) {
+              updateUser(input: $input) {
+                id
+                fcmToken
+              }
+            }
+          ''',
+          variables: {
+            "input": {
+              "id": userId,
+              "fcmToken": token, 
+            }
+          },
+          authorizationMode: APIAuthorizationType.userPools, 
+        ),
+      ).response;
+
+      print('El response es ${response}');
+
+      final session = await Amplify.Auth.fetchAuthSession();
+      print('El session es ${session}');
+
+    } catch (e) {
+      safePrint("Error en saveFCMToken: $e");
     }
   }
 }
