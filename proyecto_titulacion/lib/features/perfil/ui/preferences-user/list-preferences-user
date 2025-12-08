@@ -1,0 +1,89 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:proyecto_titulacion/features/posts/controller/posts_list_controller.dart';
+import 'package:proyecto_titulacion/features/perfil/controller/user_preferences_controller.dart';
+
+class TagCatalog {
+  final String id;
+  final String label;
+  final String value;
+  final String? iconName;
+  TagCatalog({required this.id, required this.label, required this.value, this.iconName});
+}
+
+
+class PreferenciasContenidoScreen extends ConsumerWidget {
+  const PreferenciasContenidoScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tagListAsync = ref.watch(tagListControllerProvider);
+    
+    final userPrefsAsync = ref.watch(userPreferencesControllerProvider);
+    print('Las preferencias que se mostrarran en la interfaz: ${userPrefsAsync}');
+    if (userPrefsAsync.isLoading || tagListAsync.isLoading) {
+      return Scaffold( 
+        appBar: AppBar(title: const Text('Preferencias')), 
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    
+    if (userPrefsAsync.hasError || tagListAsync.hasError) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Preferencias')),
+        body: Center(child: Text('Error: ${userPrefsAsync.error ?? tagListAsync.error}')),
+      );
+    }
+    
+    final tags = tagListAsync.value!; 
+    final activeTags = userPrefsAsync.value!; 
+    print('preferencias ectraidas: ${activeTags}');
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('TABLON-QUETZAL'),
+        centerTitle: true,
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
+            child: Text(
+              'Preferencias de Contenido:',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF388E3C),
+              ),
+            ),
+          ),
+          Expanded(
+            child: ListView.separated(
+              itemCount: tags.length,
+              separatorBuilder: (context, index) => Divider(height: 1),
+              itemBuilder: (context, index) {
+                final tag = tags[index];
+                
+                final isEnabled = activeTags.contains(tag.value); 
+                print('el active tag es: ${activeTags}');
+                print('el active tag value es: ${tag.value}');
+                return SwitchListTile(
+                  title: Text(tag.label),
+                  subtitle: Text('Mostrar contenido de ${tag.label.toLowerCase()}.'),
+                  
+                  value: isEnabled, 
+                  
+                  onChanged: (bool newValue) {
+                    ref.read(userPreferencesControllerProvider.notifier)
+                       .updatePreference(tag.value, newValue);
+                  },
+                  activeColor: Color(0xFF388E3C),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

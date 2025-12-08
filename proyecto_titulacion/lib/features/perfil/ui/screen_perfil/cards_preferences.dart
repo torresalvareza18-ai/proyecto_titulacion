@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:proyecto_titulacion/features/perfil/ui/preferences-user/list-preferences-user';
 
 class ProfileSettings extends StatelessWidget {
   const ProfileSettings({super.key});
@@ -14,7 +15,12 @@ class ProfileSettings extends StatelessWidget {
             title: 'Preferencias de Contenido',
             subtitle: 'Personaliza tu feed',
             onTap: () {
-              print("Ir a preferencias de contenido");
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PreferenciasContenidoScreen(),
+                ),
+              );
             },
           ),
           const SizedBox(height: 12),

@@ -19,10 +19,10 @@ class PostsRepository {
 
  Future<PaginatedResult<Post>> getPostsByTagPaginated({
   String? nextToken,
-  required String tagName
+  required List<String> preferences
   }) {
     return postsAPIService.getPostsByTagPaginated(
-      tagName: tagName, 
+      preferences: preferences, 
       nextToken: nextToken,
     );
  }

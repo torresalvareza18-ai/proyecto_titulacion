@@ -1,14 +1,14 @@
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:proyecto_titulacion/features/posts/controller/posts_list_controller.dart';
-import 'package:proyecto_titulacion/features/posts/ui/post_card/expandable_post_card.dart';
 import 'package:proyecto_titulacion/features/posts/ui/post_card/normal_post.dart';
 import 'package:proyecto_titulacion/main.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 class PostsListPage extends ConsumerStatefulWidget {
   final String initialTagName;
-  const PostsListPage({this.initialTagName = 'todos', super.key});
+  const PostsListPage({this.initialTagName = 'preferencias', super.key});
   @override
   ConsumerState<PostsListPage> createState() => _PostsListPageState();
 }
@@ -89,29 +89,47 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
                 scrollDirection: Axis.horizontal,
                 itemCount: tags.length,
                 itemBuilder: (context, index) {
-                  if (index == 0) {
-                    const tagValue = 'todos';
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8.0, left: 8.0),
-                      child: _buildCategoryChip(
-                        'Todos', 
-                        Icons.home, 
-                        _currentTagName == 'todos',
-                        () => _handleChipTapped(tagValue),
-                      ),
-                    );
-                  }
-                  final tag = tags[index - 1];
-                  return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: _buildCategoryChip(
-                    tag.label, 
-                    iconMap[tag.iconName] ?? Icons.category, 
-                    tag.value == _currentTagName,
-                    () => _handleChipTapped(tag.label),
-                  ),
-                );
                   
+                  const String todosTag = 'todos';
+                  const String prefTag = 'preferencias';
+                  
+                  if (index == 0) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0), 
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min, 
+                        children: [
+                          _buildCategoryChip(
+                            'Todos', 
+                            Icons.label, 
+                            _currentTagName == todosTag, 
+                            () => _handleChipTapped(todosTag), 
+                          ),
+                          const SizedBox(width: 8.0),
+                          _buildCategoryChip(
+                            'Preferencias', 
+                            Icons.home, 
+                            _currentTagName == prefTag, 
+                            () => _handleChipTapped(prefTag), 
+                          ),
+                        ],
+                      ),
+                    ); 
+                  }
+                  
+                  final tag = tags[index - 1];
+                  final String chipValue = tag.value; 
+                  
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: _buildCategoryChip(
+                      tag.label, 
+                      iconMap[tag.iconName] ?? Icons.category, 
+                      _currentTagName == chipValue, 
+                      () => _handleChipTapped(chipValue), 
+                    ),
+                  );
                 },
               ), 
               loading: () => const LinearProgressIndicator(),
@@ -124,7 +142,36 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Error: ${err}')),
         data: (posts) {
-         
+          if (posts.isEmpty) {
+            return RefreshIndicator(
+              onRefresh: () async {
+                await ref.read(postsListControllerProvider.notifier).loadFirstPage(_currentTagName);
+              },
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: SizedBox(
+                      height: constraints.maxHeight,
+                      child: const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.inbox, size: 64, color: Colors.grey),
+                            SizedBox(height: 16),
+                            Text(
+                              'No hay publicaciones aún',
+                              style: TextStyle(fontSize: 18, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            );
+          }
           return RefreshIndicator(
             onRefresh: () async { 
               await ref.read(postsListControllerProvider.notifier).loadFirstPage(_currentTagName);
