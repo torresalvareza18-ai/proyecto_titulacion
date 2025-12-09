@@ -182,23 +182,24 @@ class _NormalPostState extends ConsumerState<Normal_post> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                     Text(
-                      '${post.authorFamily} : ${post.authorName}',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: _textColor, fontSize: 16),
-                    ),
-                    Text(
-                      "${post.tags}",
-                      style: TextStyle(color: _textColor, fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${post.authorFamily} : ${post.authorName}',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: _textColor, fontSize: 16),
+                        ),
+                      Text(
+                        "${post.tags}",
+                        style: TextStyle(color: _textColor, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  )
+                )
               ],
             ),
             const SizedBox(height: 16),
-
             Text(
               post.title,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87),
