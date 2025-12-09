@@ -55,7 +55,6 @@ class _PostsListPageState extends ConsumerState<PostsListPage> with AutomaticKee
 
   void _handleChipTapped(String newTagName) {
     if (_currentTagName == newTagName) return;
-    safePrint('EL newTagName es $newTagName');
     setState(() {
       _currentTagName = newTagName;
     });

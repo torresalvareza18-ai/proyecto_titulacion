@@ -23,15 +23,7 @@ class ProfileSettings extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 12),
-          _SettingsTile(
-            icon: Icons.notifications_none_outlined,
-            title: 'Preferencias de Notificaciones',
-            subtitle: 'Personaliza tus notificaciones',
-            onTap: () {
-              print("Ir a notificaciones");
-            },
-          ),
+          
         ],
       ),
     );

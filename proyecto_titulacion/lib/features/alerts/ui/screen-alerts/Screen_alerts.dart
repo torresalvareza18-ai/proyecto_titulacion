@@ -1,63 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:proyecto_titulacion/features/alerts/controller/notification_controller.dart';
 
-class AlertsScreen extends StatelessWidget {
+class AlertsScreen extends ConsumerWidget { 
   const AlertsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) { // CAMBIO: Añadir WidgetRef
+    
+    // Watch para el controlador de notificaciones
+    final notificationsAsync = ref.watch(notificationsListProvider);
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Badge(
-              smallSize: 8,
-              backgroundColor: Colors.red,
-              child: Icon(Icons.bookmark_border, color: Colors.black87),
-            ),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Badge(
-              smallSize: 8,
-              backgroundColor: Colors.red,
-              child: Icon(Icons.notifications_none, color: Colors.black87),
-            ),
-          ),
-          const SizedBox(width: 12),
-        ],
-      ),
+      
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-            color: const Color(0xFFE8F5E9),
-            child: Text(
-              'Notificaciones / Alertas:',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.green[900],
-              ),
-            ),
-          ),
+          
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.all(0),
-              itemCount: 5,
-              separatorBuilder: (context, index) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                return const _NotificationTile(
-                  title: 'Cambio de salón',
-                  time: 'Hace 10 min',
-                  message: 'La clase de Ingeniería de Software se mueve al laboratorio 3.',
-                  isUnread: true,
+            child: notificationsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) => Center(child: Text('Error cargando: $err')),
+              data: (notifications) {
+                if (notifications.isEmpty) {
+                  return const Center(child: Text('No tienes notificaciones.'));
+                }
+                
+                return ListView.separated(
+                  padding: const EdgeInsets.all(0),
+                  itemCount: notifications.length,
+                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final notification = notifications[index];
+                    return _NotificationTile(
+                        title: notification.title,
+                        time: notification.createdAt.toString(), // [TODO]: Implementar lógica de tiempo
+                        message: notification.body,
+                        isUnread: false, // [TODO]: Usar campo isRead del modelo
+                      );
+                  },
                 );
               },
             ),
@@ -94,11 +75,14 @@ class _NotificationTile extends StatelessWidget {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.green[900],
+            Expanded( 
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green[900],
+                ),
+                overflow: TextOverflow.ellipsis, // Opcional: para agregar "..." si es muy largo
               ),
             ),
             Text(

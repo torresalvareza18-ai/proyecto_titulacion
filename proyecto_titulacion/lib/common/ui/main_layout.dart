@@ -92,7 +92,6 @@ class _NavigationMenuState extends State<NavigationMenu> {
                       isDense: true, 
                     ),
                     onChanged: (texto) {
-                      print("Filtrando por: $texto");
                     },
                   )
                 : null, 

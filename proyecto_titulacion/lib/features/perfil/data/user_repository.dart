@@ -35,7 +35,6 @@ class UserRepository {
     final userId = await _apiService.getUserIdByEmail(userEmail);
     final userData = await _apiService.getUserById(userId);
 
-    print('la user data de repository es: $userData');
 
     return {
       "id": userData["id"],

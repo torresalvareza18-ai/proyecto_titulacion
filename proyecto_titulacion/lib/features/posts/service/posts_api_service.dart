@@ -39,7 +39,6 @@ class PostsAPIService {
   }) async {
     final bool showAll = preferences.isEmpty;
 
-    print('Las preferencias son: $preferences');
 
     String buildFilter(List<String> preferences) {
       if (preferences.isEmpty) return '';
@@ -95,21 +94,18 @@ class PostsAPIService {
       variables: variables,
     );
 
-    print('Documento GraphQL:\n$document');
 
     try {
       final response = await Amplify.API.query(request: request).response;
-      print('Response raw: ${response.data}');
+     
 
       if (response.data == null) {
-        safePrint('No se obtuvieron datos: ${response.errors}');
-        return PostTagPage(items: [], nextToken: null);
+          return PostTagPage(items: [], nextToken: null);
       }
 
       final Map<String, dynamic> json = jsonDecode(response.data);
       final data = json['listPostTags'];
 
-      print('la data transforamda es $data');
 
       if (data == null) return PostTagPage(items: [], nextToken: null);
 
@@ -117,7 +113,6 @@ class PostsAPIService {
           .map((json) => PostTag.fromJson(Map<String, dynamic>.from(json)))
           .toList();
 
-      print('Los items son: $items');
 
       return PostTagPage(items: items, nextToken: data['nextToken']);
     } catch (e) {
@@ -198,7 +193,6 @@ Future<PaginatedResult<Post>> getPostsByTagPaginated({
       // --- ORDENAMIENTO CON DEBUG ---
       final now = DateTime.now().subtract(const Duration(days: 1)); 
 
-      print("\n--- INICIANDO ORDENAMIENTO ---");
       
       validPosts.sort((a, b) {
         final String strA = getFirstDateString(a.dates);
@@ -246,7 +240,6 @@ Future<PaginatedResult<Post>> getPostsByTagPaginated({
         return 0;
       });
 
-      print("--- ORDENAMIENTO FINALIZADO ---\n");
 
       // Recursividad si quedó vacío
       if (validPosts.isEmpty && tagPage.nextToken != null) {

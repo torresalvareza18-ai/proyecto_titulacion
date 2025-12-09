@@ -17,22 +17,17 @@ Future<void> _setupFirebaseMessaging(UserRepository userRepository) async {
   final messaging = FirebaseMessaging.instance;
   await messaging.requestPermission();
   final token = await messaging.getToken();
-  print('El token es ${token}');
   if (token != null) {
     await userRepository.saveFCMToken(token!);
-    safePrint('✅ FCM Token Obtenido: $token');  
   }
   messaging.onTokenRefresh.listen((newToken) {
-    safePrint('🔄 FCM Token Refrescado: $newToken'); 
   });
-  safePrint("✅ Listener de Token activado desde main.dart.");
 }
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await Firebase.initializeApp();
-    safePrint('✅ Firebase se inició');
   } catch (e) {
     safePrint("Error al iniciar Firebase: $e");
   }

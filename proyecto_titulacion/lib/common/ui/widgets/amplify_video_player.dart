@@ -26,24 +26,26 @@ class _AmplifyVideoPlayerState extends State<AmplifyVideoPlayer> {
   }
 
   Future<void> _initializeVideo() async {
+    print("El url es ${widget.storageKey}");
     try {
       final result = await Amplify.Storage.getUrl(
-        key: 'public/${widget.storageKey}',
+        key: widget.storageKey,
         options: const StorageGetUrlOptions(
-          //accessLevel: StorageAccessLevel.guest,
+          accessLevel: StorageAccessLevel.guest,
           pluginOptions: S3GetUrlPluginOptions(
             validateObjectExistence: true,
             expiresIn: Duration(days: 1),
           ),
         ),
       ).result;
-      
+      print('EL result es ${result}');
       final url = result.url;
-
+      print('EL url de resul es ${url}');
       // 2. Configurar el controlador de video base
       _videoController = VideoPlayerController.networkUrl(url);
+      print('El videaso es ${_videoController}');
       await _videoController!.initialize();
-
+      print('El video controller es ${_videoController}');
       // 3. Configurar Chewie (la interfaz bonita con play/pause)
       _chewieController = ChewieController(
         videoPlayerController: _videoController!,

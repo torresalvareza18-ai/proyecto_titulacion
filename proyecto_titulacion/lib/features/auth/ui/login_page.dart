@@ -143,20 +143,7 @@ class _LoginPageState extends State<LoginPage> {
                 Divider(color: Colors.grey.shade300, thickness: 1, indent: 20, endIndent: 20),
                 const SizedBox(height: 10),
 
-                // 6. LINKS INFERIORES
-                TextButton(
-                  onPressed: () {
-                    // Lógica recuperar contraseña
-                  },
-                  child: Text(
-                    '¿Olvidaste tu contraseña?',
-                    style: TextStyle(
-                      color: Colors.grey[800],
-                      decoration: TextDecoration.underline,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
+                
                 
                 TextButton(
                   onPressed: () => context.go('/register'),

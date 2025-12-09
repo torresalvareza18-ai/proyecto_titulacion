@@ -20,7 +20,7 @@ class PreferenciasContenidoScreen extends ConsumerWidget {
     final tagListAsync = ref.watch(tagListControllerProvider);
     
     final userPrefsAsync = ref.watch(userPreferencesControllerProvider);
-    print('Las preferencias que se mostrarran en la interfaz: ${userPrefsAsync}');
+   
     if (userPrefsAsync.isLoading || tagListAsync.isLoading) {
       return Scaffold( 
         appBar: AppBar(title: const Text('Preferencias')), 
@@ -37,7 +37,6 @@ class PreferenciasContenidoScreen extends ConsumerWidget {
     
     final tags = tagListAsync.value!; 
     final activeTags = userPrefsAsync.value!; 
-    print('preferencias ectraidas: ${activeTags}');
     return Scaffold(
       appBar: AppBar(
         title: const Text('TABLON-QUETZAL'),
@@ -65,8 +64,7 @@ class PreferenciasContenidoScreen extends ConsumerWidget {
                 final tag = tags[index];
                 
                 final isEnabled = activeTags.contains(tag.value); 
-                print('el active tag es: ${activeTags}');
-                print('el active tag value es: ${tag.value}');
+              
                 return SwitchListTile(
                   title: Text(tag.label),
                   subtitle: Text('Mostrar contenido de ${tag.label.toLowerCase()}.'),

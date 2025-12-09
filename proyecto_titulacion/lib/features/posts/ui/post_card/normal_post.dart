@@ -39,66 +39,92 @@ class _NormalPostState extends ConsumerState<Normal_post> {
   }
 
   bool _isVideo(String filename) {
+    print('el filename es ${filename}');
     final ext = filename.split('.').last.toLowerCase();
+    print('El queso ${ext}');
     return ['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(ext);
   }
 
   Future<void> _guardarEnCalendarioNativo(Post post) async {
-    if (post.dates == null || post.dates!.isEmpty) return;
+    String dateToSchedule;
+    try {
+        final dynamic decoded = jsonDecode(post.dates!);
+        
+        if (decoded is List && decoded.isNotEmpty) {
+            dateToSchedule = decoded.first.toString();
+        } else if (decoded is String) {
+            dateToSchedule = decoded;
+        } else {
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("No hay fecha definida para agendar.")));
+            return;
+        }
+    } catch (e) {
+        dateToSchedule = post.dates!; 
+    }
+    
+    if (dateToSchedule.isEmpty) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("No hay fecha definida para agendar.")));
+        return;
+    }
 
     final DeviceCalendarPlugin deviceCalendarPlugin = DeviceCalendarPlugin();
 
-    var permissionsGranted = await deviceCalendarPlugin.hasPermissions();
-    if (permissionsGranted.isSuccess && !permissionsGranted.data!) {
-      permissionsGranted = await deviceCalendarPlugin.requestPermissions();
-      if (!permissionsGranted.isSuccess || !permissionsGranted.data!) {
-        return;
-      }
+    var permissionsGranted = await deviceCalendarPlugin.hasPermissions(); 
+    if (permissionsGranted.isSuccess && !permissionsGranted.data!) { 
+        permissionsGranted = await deviceCalendarPlugin.requestPermissions(); 
+        if (!permissionsGranted.isSuccess || !permissionsGranted.data!) { 
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Permiso de calendario denegado.")));
+            return; 
+        }
     }
 
-    final calendarsResult = await deviceCalendarPlugin.retrieveCalendars();
+    final calendarsResult = await deviceCalendarPlugin.retrieveCalendars(); 
     final calendar = calendarsResult.data?.firstWhere(
-      (c) => c.isDefault == true && c.isReadOnly == false,
-      orElse: () => calendarsResult.data!.first,
+        (c) => c.isDefault == true && c.isReadOnly == false, 
+        orElse: () => calendarsResult.data!.first,
     );
 
     if (calendar == null) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Calendario no encontrado")));
-      return;
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Calendario no encontrado")));
+        return;
     }
 
-    List<dynamic> dateList = [];
+    DateTime? fecha;
+    final DateFormat inputFormat = DateFormat('dd/MM/yyyy'); 
+    
     try {
-      final dynamic decoded = jsonDecode(post.dates!);
-      if (decoded is List) {
-        dateList = decoded;
-      } else if (decoded is String) dateList = [decoded];
+        fecha = inputFormat.parseStrict(dateToSchedule);
     } catch (e) {
-      dateList = [post.dates!]; 
+        fecha = DateTime.tryParse(dateToSchedule);
+    }
+    
+    if (fecha == null) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Formato de fecha no reconocido.")));
+        return;
     }
 
-    for (var dateString in dateList) {
-      final DateTime? fecha = DateTime.tryParse(dateString.toString());
-      if (fecha != null) {
-        final event = Event(
-          calendar.id,
-          title: "Evento: ${post.title}",
-          description: post.description,
-          start: tz.TZDateTime.from(fecha, tz.local),
-          end: tz.TZDateTime.from(fecha.add(const Duration(hours: 2)), tz.local),
-          allDay: true,
-        );
-        await deviceCalendarPlugin.createOrUpdateEvent(event);
-      }
-    }
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Fechas guardadas en tu calendario"))
-      );
-    }
+    final DateTime eventStart = DateTime(fecha.year, fecha.month, fecha.day); 
+    final DateTime eventEnd = eventStart.add(const Duration(days: 1));
+    
+    final event = Event(
+        calendar.id,
+        title: "Evento: ${post.title}", 
+        description: post.description, 
+        start: tz.TZDateTime.from(eventStart, tz.local), 
+        end: tz.TZDateTime.from(eventEnd, tz.local),      
+        allDay: true, 
+    );
+    final result = await deviceCalendarPlugin.createOrUpdateEvent(event);
+    
+    
+        if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Fecha guardada en tu calendario: ${eventStart.day}/${eventStart.month}"))
+            );
+        }
+    
   }
-
+  
   String _getFormattedDate() {
     if (widget.post.dates == null || widget.post.dates!.isEmpty) return "Próximamente";
     try {
@@ -147,6 +173,8 @@ class _NormalPostState extends ConsumerState<Normal_post> {
     final String? mediaKey = (post.images != null && post.images!.isNotEmpty)
         ? post.images![0]
         : null;
+
+    print('El mediakey ${mediaKey}');
 
     return Card(
       color: _cardBackgroundColor,
@@ -215,6 +243,7 @@ class _NormalPostState extends ConsumerState<Normal_post> {
 
             _buildInfoChip(Icons.calendar_today, _getFormattedDate()),
             const SizedBox(height: 16),
+            
 
             if (mediaKey != null)
               _buildMediaContent(mediaKey),

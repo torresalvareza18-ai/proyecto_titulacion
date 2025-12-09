@@ -132,14 +132,12 @@ class UserAPIService {
       }
     ''';
 
-    print('User id ${userId}');
 
     try {
       final response = await Amplify.API.query(
         request: GraphQLRequest<String>(document: query),
       ).response;
 
-      print('EL response es: ${response}');
 
       if (response.data == null) {
         throw Exception("No se encontró el usuario");
@@ -147,7 +145,6 @@ class UserAPIService {
 
       final data = jsonDecode(response.data!);
 
-      print("data ${data['getUser']}");
 
       return data['getUser'];
     } catch (e) {
@@ -160,7 +157,7 @@ class UserAPIService {
     try {
       final request = ModelMutations.update(user);
       await Amplify.API.mutate(request: request).response;
-      safePrint("User record updated successfully in DataStore/Cloud.");
+      
     } on DataStoreException catch (e) {
       safePrint("Error updating user record: $e");
     }
@@ -189,10 +186,9 @@ class UserAPIService {
         ),
       ).response;
 
-      print('El response es ${response}');
 
       final session = await Amplify.Auth.fetchAuthSession();
-      print('El session es ${session}');
+      
 
     } catch (e) {
       safePrint("Error en saveFCMToken: $e");
