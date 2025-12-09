@@ -12,7 +12,7 @@ import 'package:proyecto_titulacion/features/posts/service/posts_api_service.dar
 
 part 'posts_list_controller.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class PostsListController extends _$PostsListController {
   String? _nextToken;
   bool _hasMore = true;
@@ -108,7 +108,7 @@ class PostsListController extends _$PostsListController {
   bool get hasMore => _hasMore;
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class TagListController extends _$TagListController {
   
   Future<List<TagCatalog>> getAllTagCatalogs() async {

@@ -13,10 +13,12 @@ class PostsListPage extends ConsumerStatefulWidget {
   ConsumerState<PostsListPage> createState() => _PostsListPageState();
 }
 
-class _PostsListPageState extends ConsumerState<PostsListPage> {
+class _PostsListPageState extends ConsumerState<PostsListPage> with AutomaticKeepAliveClientMixin {
   final ScrollController _scrollController = ScrollController();
 
   late String _currentTagName;
+
+  
   
   @override
   void initState() {
@@ -25,11 +27,18 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
     _currentTagName = widget.initialTagName;
     
     Future.microtask(() {
-      ref.read(postsListControllerProvider.notifier).loadFirstPage(_currentTagName);
+      final controller = ref.read(postsListControllerProvider.notifier);
+      final posts = ref.read(postsListControllerProvider);
+      if (posts.value == null || posts.value!.isEmpty) {
+        controller.loadFirstPage(_currentTagName);
+      }
     });
 
     _scrollController.addListener(_onScroll);
   }
+
+  @override
+  bool get wantKeepAlive => true;
 
   void _onScroll() {
     if (_scrollController.position.pixels >= 
@@ -55,7 +64,7 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
 
   @override
   Widget build(BuildContext context) {
-
+    super.build(context);
     final postsAsync = ref.watch(postsListControllerProvider);
     final tagsAsync = ref.watch(tagListControllerProvider);
     final hasMore = ref.read(postsListControllerProvider.notifier).hasMore;
@@ -77,8 +86,6 @@ class _PostsListPageState extends ConsumerState<PostsListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        
-        
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(5),
           child: Container(
