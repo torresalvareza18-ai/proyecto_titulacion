@@ -28,6 +28,13 @@ class _NavigationMenuState extends State<NavigationMenu> {
 
   int currentPageIndex = 0;
 
+  final List<Widget> _pages = const [ 
+    PostsListPage(),
+    BookmarkList(),
+    AlertsScreen(),
+    ProfileScreen(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
@@ -106,12 +113,10 @@ class _NavigationMenuState extends State<NavigationMenu> {
           const SizedBox(width: 16),
         ],
       ),
-      body: <Widget>[
-        const PostsListPage(),
-        const BookmarkList(),
-        const AlertsScreen(),
-        const ProfileScreen(),
-      ][currentPageIndex],
+      body: IndexedStack(
+        index: currentPageIndex,
+        children: _pages,
+      ),
       bottomNavigationBar: NavigationBarTheme(
 
         data: NavigationBarThemeData( 
