@@ -7,12 +7,12 @@ part of 'posts_list_controller.dart';
 // **************************************************************************
 
 String _$postsListControllerHash() =>
-    r'db1b0d413aa98967a9580441e334baf2e4906715';
+    r'e54f48232ff0a0b0b60b74c9a73dec3e48746358';
 
 /// See also [PostsListController].
 @ProviderFor(PostsListController)
 final postsListControllerProvider =
-    AutoDisposeAsyncNotifierProvider<PostsListController, List<Post>>.internal(
+    AsyncNotifierProvider<PostsListController, List<Post>>.internal(
   PostsListController.new,
   name: r'postsListControllerProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -22,13 +22,13 @@ final postsListControllerProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$PostsListController = AutoDisposeAsyncNotifier<List<Post>>;
-String _$tagListControllerHash() => r'82473edb166238d22fe44a287039c871c76414d4';
+typedef _$PostsListController = AsyncNotifier<List<Post>>;
+String _$tagListControllerHash() => r'a371f22a8a4de5fa295f0dd7d521c653615beddc';
 
 /// See also [TagListController].
 @ProviderFor(TagListController)
-final tagListControllerProvider = AutoDisposeAsyncNotifierProvider<
-    TagListController, List<TagCatalog>>.internal(
+final tagListControllerProvider =
+    AsyncNotifierProvider<TagListController, List<TagCatalog>>.internal(
   TagListController.new,
   name: r'tagListControllerProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -38,6 +38,6 @@ final tagListControllerProvider = AutoDisposeAsyncNotifierProvider<
   allTransitiveDependencies: null,
 );
 
-typedef _$TagListController = AutoDisposeAsyncNotifier<List<TagCatalog>>;
+typedef _$TagListController = AsyncNotifier<List<TagCatalog>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member

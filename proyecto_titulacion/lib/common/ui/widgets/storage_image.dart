@@ -22,7 +22,7 @@ class StorageImage extends StatefulWidget {
   State<StorageImage> createState() => _StorageImageState();
 }
 
-class _StorageImageState extends State<StorageImage> {
+class _StorageImageState extends State<StorageImage> with AutomaticKeepAliveClientMixin {
   String? _downloadUrl;
   bool _isLoading = true;
   bool _hasError = false;
@@ -33,17 +33,24 @@ class _StorageImageState extends State<StorageImage> {
     _getUrl();
   }
 
+  @override
+  bool get wantKeepAlive => true;
+
   Future<void> _getUrl() async {
+    print(widget.key);
     try {
       final result = await Amplify.Storage.getUrl(
         key: widget.imageKey,
         options: const StorageGetUrlOptions(
+          accessLevel: StorageAccessLevel.guest,
           pluginOptions: S3GetUrlPluginOptions(
             validateObjectExistence: true,
             expiresIn: Duration(days: 1),
           ),
         ),
       ).result;
+
+      print('El print es ${result}');
 
       if (mounted) {
         setState(() {

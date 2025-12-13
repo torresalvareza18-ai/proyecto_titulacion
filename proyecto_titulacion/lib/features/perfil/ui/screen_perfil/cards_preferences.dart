@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:proyecto_titulacion/features/perfil/ui/preferences-user/list-preferences-user';
 
 class ProfileSettings extends StatelessWidget {
   const ProfileSettings({super.key});
@@ -14,18 +15,15 @@ class ProfileSettings extends StatelessWidget {
             title: 'Preferencias de Contenido',
             subtitle: 'Personaliza tu feed',
             onTap: () {
-              print("Ir a preferencias de contenido");
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PreferenciasContenidoScreen(),
+                ),
+              );
             },
           ),
-          const SizedBox(height: 12),
-          _SettingsTile(
-            icon: Icons.notifications_none_outlined,
-            title: 'Preferencias de Notificaciones',
-            subtitle: 'Personaliza tus notificaciones',
-            onTap: () {
-              print("Ir a notificaciones");
-            },
-          ),
+          
         ],
       ),
     );
@@ -61,12 +59,12 @@ class _SettingsTile extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.green[400], 
+            color: Colors.orangeAccent, 
             shape: BoxShape.circle,
           ),
           child: Icon(
             icon,
-            color: Colors.white, 
+            color: Colors.grey[900], 
             size: 24,
           ),
         ),
