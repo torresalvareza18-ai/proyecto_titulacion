@@ -5,11 +5,13 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:proyecto_titulacion/models/Post.dart';
-import 'package:proyecto_titulacion/common/ui/widgets/storage_image.dart';
 import 'package:proyecto_titulacion/common/ui/widgets/amplify_video_player.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:proyecto_titulacion/features/bookmarkPost/controller/bookmark_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:amplify_storage_s3/amplify_storage_s3.dart';
 
 class Normal_post extends ConsumerStatefulWidget {
   final Post post;
@@ -25,12 +27,15 @@ class Normal_post extends ConsumerStatefulWidget {
   ConsumerState<Normal_post> createState() => _NormalPostState();
 }
 
-class _NormalPostState extends ConsumerState<Normal_post> {
+class _NormalPostState extends ConsumerState<Normal_post> with AutomaticKeepAliveClientMixin {
   bool? _localSaved;
 
   static const Color _cardBackgroundColor = Color(0xFFE8F5E9);
   static const Color _chipBackgroundColor = Color(0xFFFFF9C4);
   static final Color _textColor = Colors.green[800]!;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -39,92 +44,87 @@ class _NormalPostState extends ConsumerState<Normal_post> {
   }
 
   bool _isVideo(String filename) {
-    print('el filename es ${filename}');
     final ext = filename.split('.').last.toLowerCase();
-    print('El queso ${ext}');
     return ['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(ext);
   }
 
   Future<void> _guardarEnCalendarioNativo(Post post) async {
     String dateToSchedule;
     try {
-        final dynamic decoded = jsonDecode(post.dates!);
-        
-        if (decoded is List && decoded.isNotEmpty) {
-            dateToSchedule = decoded.first.toString();
-        } else if (decoded is String) {
-            dateToSchedule = decoded;
-        } else {
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("No hay fecha definida para agendar.")));
-            return;
-        }
-    } catch (e) {
-        dateToSchedule = post.dates!; 
-    }
-    
-    if (dateToSchedule.isEmpty) {
+      final dynamic decoded = jsonDecode(post.dates!);
+      if (decoded is List && decoded.isNotEmpty) {
+        dateToSchedule = decoded.first.toString();
+      } else if (decoded is String) {
+        dateToSchedule = decoded;
+      } else {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("No hay fecha definida para agendar.")));
         return;
+      }
+    } catch (e) {
+      dateToSchedule = post.dates!;
+    }
+
+    if (dateToSchedule.isEmpty) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("No hay fecha definida para agendar.")));
+      return;
     }
 
     final DeviceCalendarPlugin deviceCalendarPlugin = DeviceCalendarPlugin();
 
-    var permissionsGranted = await deviceCalendarPlugin.hasPermissions(); 
-    if (permissionsGranted.isSuccess && !permissionsGranted.data!) { 
-        permissionsGranted = await deviceCalendarPlugin.requestPermissions(); 
-        if (!permissionsGranted.isSuccess || !permissionsGranted.data!) { 
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Permiso de calendario denegado.")));
-            return; 
-        }
+    var permissionsGranted = await deviceCalendarPlugin.hasPermissions();
+    if (permissionsGranted.isSuccess && !permissionsGranted.data!) {
+      permissionsGranted = await deviceCalendarPlugin.requestPermissions();
+      if (!permissionsGranted.isSuccess || !permissionsGranted.data!) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Permiso de calendario denegado.")));
+        return;
+      }
     }
 
-    final calendarsResult = await deviceCalendarPlugin.retrieveCalendars(); 
+    final calendarsResult = await deviceCalendarPlugin.retrieveCalendars();
     final calendar = calendarsResult.data?.firstWhere(
-        (c) => c.isDefault == true && c.isReadOnly == false, 
-        orElse: () => calendarsResult.data!.first,
+      (c) => c.isDefault == true && c.isReadOnly == false,
+      orElse: () => calendarsResult.data!.first,
     );
 
     if (calendar == null) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Calendario no encontrado")));
-        return;
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Calendario no encontrado")));
+      return;
     }
 
     DateTime? fecha;
-    final DateFormat inputFormat = DateFormat('dd/MM/yyyy'); 
-    
+    final DateFormat inputFormat = DateFormat('dd/MM/yyyy');
+
     try {
-        fecha = inputFormat.parseStrict(dateToSchedule);
+      fecha = inputFormat.parseStrict(dateToSchedule);
     } catch (e) {
-        fecha = DateTime.tryParse(dateToSchedule);
-    }
-    
-    if (fecha == null) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Formato de fecha no reconocido.")));
-        return;
+      fecha = DateTime.tryParse(dateToSchedule);
     }
 
-    final DateTime eventStart = DateTime(fecha.year, fecha.month, fecha.day); 
+    if (fecha == null) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Formato de fecha no reconocido.")));
+      return;
+    }
+
+    final DateTime eventStart = DateTime(fecha.year, fecha.month, fecha.day);
     final DateTime eventEnd = eventStart.add(const Duration(days: 1));
-    
+
     final event = Event(
-        calendar.id,
-        title: "Evento: ${post.title}", 
-        description: post.description, 
-        start: tz.TZDateTime.from(eventStart, tz.local), 
-        end: tz.TZDateTime.from(eventEnd, tz.local),      
-        allDay: true, 
+      calendar.id,
+      title: "Evento: ${post.title}",
+      description: post.description,
+      start: tz.TZDateTime.from(eventStart, tz.local),
+      end: tz.TZDateTime.from(eventEnd, tz.local),
+      allDay: true,
     );
     final result = await deviceCalendarPlugin.createOrUpdateEvent(event);
-    
-    
-        if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Fecha guardada en tu calendario: ${eventStart.day}/${eventStart.month}"))
-            );
-        }
-    
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Fecha guardada en tu calendario: ${eventStart.day}/${eventStart.month}"))
+      );
+    }
   }
-  
+
   String _getFormattedDate() {
     if (widget.post.dates == null || widget.post.dates!.isEmpty) return "Próximamente";
     try {
@@ -133,14 +133,14 @@ class _NormalPostState extends ConsumerState<Normal_post> {
       if (decoded is List && decoded.isNotEmpty) {
         dateStr = decoded.first.toString();
       } else if (decoded is String) {
-         dateStr = decoded;
+        dateStr = decoded;
       } else {
-         return "Próximamente";
+        return "Próximamente";
       }
 
       final DateTime? date = DateTime.tryParse(dateStr);
       if (date != null) {
-        return DateFormat('EEEE d \'de\' MMMM', 'es_ES').format(date); 
+        return DateFormat('EEEE d \'de\' MMMM', 'es_ES').format(date);
       }
       return dateStr;
     } catch (e) {
@@ -150,8 +150,9 @@ class _NormalPostState extends ConsumerState<Normal_post> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+    
     final post = widget.post;
-
     final logo = post.authorFamily;
 
     final socialStyles = <String, ({IconData icon, Color color})>{
@@ -161,11 +162,11 @@ class _NormalPostState extends ConsumerState<Normal_post> {
     };
 
     final style = socialStyles[post.authorFamily];
-    
+
     final bookmarkAsync = ref.watch(myBookmarksListProvider);
     bool backendSaved = bookmarkAsync.maybeWhen(
       data: (lista) => lista.any((item) => item?.postId == post.id),
-      orElse: () => false, 
+      orElse: () => false,
     );
 
     bool isSaved = _localSaved ?? backendSaved;
@@ -173,8 +174,6 @@ class _NormalPostState extends ConsumerState<Normal_post> {
     final String? mediaKey = (post.images != null && post.images!.isNotEmpty)
         ? post.images![0]
         : null;
-
-    print('El mediakey ${mediaKey}');
 
     return Card(
       color: _cardBackgroundColor,
@@ -196,7 +195,7 @@ class _NormalPostState extends ConsumerState<Normal_post> {
                     borderRadius: BorderRadius.circular(90),
                   ),
                   child: Center(
-                    child: style != null 
+                    child: style != null
                       ? FaIcon(style.icon, color: Colors.white, size: 20)
                       : Container(
                           decoration: BoxDecoration(
@@ -217,7 +216,7 @@ class _NormalPostState extends ConsumerState<Normal_post> {
                       Text(
                         '${post.authorFamily} : ${post.authorName}',
                         style: TextStyle(fontWeight: FontWeight.bold, color: _textColor, fontSize: 16),
-                        ),
+                      ),
                       Text(
                         "${post.tags}",
                         style: TextStyle(color: _textColor, fontWeight: FontWeight.w500),
@@ -243,13 +242,12 @@ class _NormalPostState extends ConsumerState<Normal_post> {
 
             _buildInfoChip(Icons.calendar_today, _getFormattedDate()),
             const SizedBox(height: 16),
-            
 
             if (mediaKey != null)
               _buildMediaContent(mediaKey),
 
             const SizedBox(height: 12),
-            
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -276,8 +274,8 @@ class _NormalPostState extends ConsumerState<Normal_post> {
 
                 Expanded(
                   child: _buildActionButton(
-                    Icons.calendar_month, 
-                    'Agendar', 
+                    Icons.calendar_month,
+                    'Agendar',
                     () => _guardarEnCalendarioNativo(post),
                     isActive: false
                   ),
@@ -303,10 +301,41 @@ class _NormalPostState extends ConsumerState<Normal_post> {
               color: Colors.grey[200],
               constraints: const BoxConstraints(maxHeight: 400),
               width: double.infinity,
-              child: StorageImage(
-                key: ValueKey(mediaKey),
-                imageKey: mediaKey,
-                fit: BoxFit.cover,
+              child: FutureBuilder<StorageGetUrlResult>(
+                future: Amplify.Storage.getUrl(
+                  key: mediaKey,
+                  options: const StorageGetUrlOptions(
+                    pluginOptions: S3GetUrlPluginOptions(
+                      validateObjectExistence: true,
+                      expiresIn: Duration(days: 1),
+                    ),
+                  ),
+                ).result, 
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return CachedNetworkImage(
+                      imageUrl: snapshot.data!.url.toString(),
+                      cacheKey: mediaKey,
+                      fit: BoxFit.cover,
+                      memCacheHeight: 1000,
+                      fadeInDuration: const Duration(microseconds: 500),
+                      placeholder: (context, url) => Container(
+                        color: Colors.grey[300],
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => const Icon(
+                        Icons.broken_image, 
+                        color: Colors.grey, 
+                        size: 50
+                      ),
+                    );
+                  } else if (snapshot.hasError) {
+                    return const Center(child: Icon(Icons.error));
+                  }
+                  return const Center(child: CircularProgressIndicator());
+                },
               ),
             ),
     );
@@ -348,9 +377,9 @@ class _NormalPostState extends ConsumerState<Normal_post> {
       ),
       icon: Icon(icon, size: 20, color: isActive ? Colors.white : _textColor),
       label: Text(
-        label, 
+        label,
         style: TextStyle(
-          color: isActive ? Colors.white : _textColor, 
+          color: isActive ? Colors.white : _textColor,
           fontWeight: FontWeight.bold,
           fontSize: 13
         )

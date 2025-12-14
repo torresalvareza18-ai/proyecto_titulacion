@@ -12,45 +12,8 @@ import 'package:amplify_storage_s3/amplify_storage_s3.dart';
 import 'amplifyconfiguration.dart'; 
 import 'package:firebase_messaging/firebase_messaging.dart'; 
 
-
-Future<void> _setupFirebaseMessaging(UserRepository userRepository) async {
-  final messaging = FirebaseMessaging.instance;
-  await messaging.requestPermission();
-  final token = await messaging.getToken();
-  if (token != null) {
-    await userRepository.saveFCMToken(token!);
-  }
-  messaging.onTokenRefresh.listen((newToken) {
-  });
-}
-
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await Firebase.initializeApp();
-  } catch (e) {
-    safePrint("Error al iniciar Firebase: $e");
-  }
-  await initializeDateFormatting('es_ES', null);
-  try {
-    await _configureAmplify();
-  } on AmplifyAlreadyConfiguredException {
-    debugPrint("Amplify ya estaba configurado.");
-  }
-  final container = ProviderContainer();
-  final session = await Amplify.Auth.fetchAuthSession();
-  if (session.isSignedIn) {
-    final userRepository = container.read(userRepositoryProvider); 
-    
-    // 💡 AGREGAR UN RETRASO MAYOR (Ej. 5 segundos)
-    await Future.delayed(Duration(seconds: 5)); 
-    
-    // Llama a la función del token
-    await _setupFirebaseMessaging(userRepository); 
-}
-  print('Usuario logueado: ${session.isSignedIn}');
-  final initialRoute = session.isSignedIn ? '/home' : '/login';
-
   runApp(
     const ProviderScope(
       child: AppLoader(),
@@ -58,11 +21,101 @@ Future<void> main() async {
   );
 }
 
-Future<void> _configureAmplify() async {
-  await Amplify.addPlugins([
-    AmplifyAuthCognito(),
-    AmplifyAPI(modelProvider: ModelProvider.instance),
-    AmplifyStorageS3()
-  ]);
-  await Amplify.configure(amplifyconfig);
+class AppLoader extends ConsumerStatefulWidget {
+  const AppLoader({super.key});
+
+  @override
+  ConsumerState<AppLoader> createState() => _AppLoaderState();
+}
+
+class _AppLoaderState extends ConsumerState<AppLoader> {
+  late Future<String> _initializationFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializationFuture = _initializeApp();
+  }
+
+  Future<void> _setupFirebaseMessaging() async {
+    try {
+      final messaging = FirebaseMessaging.instance;
+      messaging.requestPermission();
+      
+      final token = await messaging.getToken();
+      if (token != null) {
+        final userRepository = ref.read(userRepositoryProvider);
+        await userRepository.saveFCMToken(token).catchError((e) {
+          debugPrint("Error guardando token: $e");
+        });
+      }
+      
+      messaging.onTokenRefresh.listen((newToken) {});
+    } catch (e) {
+      debugPrint("Error en configuración de mensajería: $e");
+    }
+  }
+
+  Future<String> _initializeApp() async {
+    await Future.wait([
+      Firebase.initializeApp(),
+      initializeDateFormatting('es_ES', null),
+    ]);
+
+    try {
+      if (!Amplify.isConfigured) {
+        await Amplify.addPlugins([
+          AmplifyAuthCognito(),
+          AmplifyAPI(modelProvider: ModelProvider.instance),
+          AmplifyStorageS3()
+        ]);
+        await Amplify.configure(amplifyconfig);
+      }
+    } on AmplifyAlreadyConfiguredException {
+      debugPrint("Amplify ya estaba configurado.");
+    } catch (e) {
+      return '/login'; 
+    }
+
+    try {
+      final session = await Amplify.Auth.fetchAuthSession();
+
+      if (session.isSignedIn) {
+        _setupFirebaseMessaging();
+        return '/home';
+      } else {
+        return '/login';
+      }
+    } catch (e) {
+      return '/login';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<String>(
+      future: _initializationFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const MaterialApp(
+            debugShowCheckedModeBanner: false,
+            home: Scaffold(
+              backgroundColor: Colors.white,
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
+        }
+
+        if (snapshot.hasData) {
+          return TripsPlannerApp(initialRoute: snapshot.data!);
+        }
+
+        return const MaterialApp(
+          home: Scaffold(body: Center(child: Text("Error cargando la app"))),
+        );
+      },
+    );
+  }
 }

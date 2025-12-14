@@ -1,105 +1,89 @@
 import 'dart:async';
-
 import 'package:amplify_flutter/amplify_flutter.dart';
-import 'package:path/path.dart';
 import 'package:proyecto_titulacion/features/perfil/controller/user_preferences_controller.dart';
-import 'package:proyecto_titulacion/features/perfil/data/user_repository.dart';
 import 'package:proyecto_titulacion/features/posts/data/posts_repository.dart';
-import 'package:proyecto_titulacion/features/posts/service/posts_api_service.dart' hide PaginatedResult;
 import 'package:proyecto_titulacion/models/ModelProvider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:proyecto_titulacion/features/posts/service/posts_api_service.dart' hide PaginatedResult;
 
 part 'posts_list_controller.g.dart';
 
-@Riverpod(keepAlive: true)
+@riverpod
 class PostsListController extends _$PostsListController {
   String? _nextToken;
   bool _hasMore = true;
-  String _tagName = '';
-  List<String> _preferencesToSend = [];
+  List<String> _currentPreferencesUsed = [];
+
+  bool _isFetching = false;
 
   @override
-  FutureOr<List<Post>> build() async {
-    return [];
-  }
+  FutureOr<List<Post>> build(String tagName) async {
+    _isFetching = false;
+    final link = ref.keepAlive();
+    Timer(const Duration(hours: 1), () {
+      link.close();
+    });
 
-  Future<void> loadFirstPage(String tagName) async {
-    _tagName = tagName;
     _nextToken = null;
     _hasMore = true;
 
-    state = const AsyncValue.loading();
-
     final loadUserPreferences = ref.read(userPreferencesControllerProvider.notifier);
-
-    try {
-      final Map<String, dynamic> userData = await loadUserPreferences.loadUserPreferences();
-      final postsRepository = ref.read(postsRepositoryProvider);
-
-      final List<String> userPreferences = (userData['preferences'] as List).cast<String>();
-      
-      final List<String> preferencesToSend;
-
-      if (tagName == 'todos') {
-        preferencesToSend = [];
-      } else if (tagName.isNotEmpty && tagName != 'todos' && tagName != 'preferencias') {
-        preferencesToSend = [tagName];
-      } else {
-        preferencesToSend = userPreferences;
-      }
-
-      _preferencesToSend = preferencesToSend;
-
-      final result = await postsRepository.getPostsByTagPaginated(
-        
-        nextToken: null, 
-        preferences: preferencesToSend,
-      );
-
-      _hasMore = result.hasNextPage;
-      state = AsyncValue.data(result.items);
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+    final userData = await loadUserPreferences.loadUserPreferences();
+    final List<String> userPreferences = (userData['preferences'] as List).cast<String>();
+    
+    if (tagName == 'todos') {
+      _currentPreferencesUsed = [];
+    } else if (tagName.isNotEmpty && tagName != 'preferencias') {
+      _currentPreferencesUsed = [tagName];
+    } else {
+      _currentPreferencesUsed = userPreferences;
     }
+
+    final postsRepository = ref.read(postsRepositoryProvider);
+    final result = await postsRepository.getPostsByTagPaginated(
+      nextToken: null, 
+      preferences: _currentPreferencesUsed,
+    );
+
+    _nextToken = result.nextToken;
+    _hasMore = result.hasNextPage;
+
+    return result.items;
   }
 
   Future<void> loadNextPage() async {
     if (!_hasMore || state.isLoading) return;
 
-    final currentState = state;
-    if (!currentState.hasValue) return;
+    _isFetching = true;
+
+    //state = AsyncValue<List<Post>>.data(currentPosts).copyWithPrevious(state);
 
     try {
+      final currentPosts = state.value ?? [];
       final postsRepository = ref.read(postsRepositoryProvider);
 
       final result = await postsRepository.getPostsByTagPaginated(
         nextToken: _nextToken,
-        preferences: _preferencesToSend,
+        preferences: _currentPreferencesUsed,
       );
 
       _nextToken = result.nextToken;
       _hasMore = result.hasNextPage;
 
-      // --- CORRECCIÓN: EVITAR DUPLICADOS ---
-      final currentPosts = currentState.value!;
-
-      // Filtramos los nuevos posts (result.items):
-      // Solo dejamos pasar aquellos cuyo ID NO exista ya en currentPosts
       final uniqueNewPosts = result.items.where((newPost) {
-        final alreadyExists = currentPosts.any((existingPost) => existingPost.id == newPost.id);
-        return !alreadyExists;
+        return !currentPosts.any((existingPost) => existingPost.id == newPost.id);
       }).toList();
 
-      // Guardamos la lista combinada (viejos + nuevos únicos)
-      state = AsyncValue.data([
-        ...currentPosts,
-        ...uniqueNewPosts,
-      ]);
-      // -------------------------------------
+      if (uniqueNewPosts.isNotEmpty) {
+        state = AsyncValue.data([
+          ...currentPosts,
+          ...uniqueNewPosts
+        ]);
+      }
 
     } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      state = AsyncValue<List<Post>>.error(e, stack).copyWithPrevious(state);
+    } finally {
+      _isFetching = false;
     }
   }
 
@@ -118,6 +102,4 @@ class TagListController extends _$TagListController {
   FutureOr<List<TagCatalog>> build() async {
     return getAllTagCatalogs();
   }
-  
-  
 }
