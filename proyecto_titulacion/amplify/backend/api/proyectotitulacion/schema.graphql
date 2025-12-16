@@ -3,19 +3,22 @@
 input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONLY!
 
 type Post @model @auth(rules: [{ allow: public }]) {
- id: ID!
- type: String @default(value: "Post") @index(name: "postsByDate", queryField: "listPostsByDate", sortKeyFields: ["createdAt"])
- title: String!
- description: String!
- images: [String]
- tags: [String]
- dates: [AWSDate]
- createdAt: AWSDateTime! 
- updatedAt: AWSDateTime!
- authorId: ID!
- authorName: String
- authorMiddle: String
- authorFamily: String
+  id: ID!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+  
+  title: String!
+  description: String
+  dates: AWSJSON
+  
+  authorName: String
+  authorFamily: String
+  
+  post_id: String
+  post_url: String
+
+  tags: String
+  images: [String]
 }
 
 type PostTag @model @auth(rules: [{ allow: public }]) {
@@ -33,3 +36,46 @@ type TagCatalog @model @auth(rules: [{ allow: public }]) {
   value: String!      # El valor interno para tu lógica (Ej: "eventos")
   iconName: String    # El nombre del icono (Ej: "calendar_today")
 }
+
+type Notifications @model @auth(rules: [{ allow: public }]) {
+  id: ID! 
+  title: String!
+  userId: ID! @index(name: "byUser", sortKeyFields: ["createdAt"])
+  body: String!
+  relatedPostId: String
+  isRead: Boolean! @default(value: "false")
+  type: String!
+  createdAt: AWSDateTime! 
+  updatedAt: AWSDateTime! 
+}
+
+type User @model @auth(rules: [
+  { allow: owner, operations: [create, read, update] },
+  { allow: private, operations: [create] },
+  { allow: public, operations: [read] }
+  
+  ]) 
+{
+  id: ID!
+  email: String!
+  name: String
+  avatarUrl: String
+  preferences: [String]
+  fcmToken: String
+  owner: String
+  snsEndpointsArn: String
+  subscriptionArn: String
+  createdAt: AWSDateTime! 
+  updatedAt: AWSDateTime! 
+  notifications: [Notifications] @hasMany(indexName: "byUser", fields: ["id"])
+}
+
+type UserSavedPost @model @auth(rules: [{ allow: public }]) {
+  id: ID!
+  userId: ID!
+  postId: ID!
+  createdAt: AWSDateTime! 
+  updatedAt: AWSDateTime! 
+  post : Post @hasOne(fields: ["postId"])
+}
+

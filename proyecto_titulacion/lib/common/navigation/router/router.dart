@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 
@@ -6,6 +5,7 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:proyecto_titulacion/features/auth/ui/login_page.dart';
 import 'package:proyecto_titulacion/features/auth/ui/register_page.dart';
 import 'package:proyecto_titulacion/common/ui/main_layout.dart';
+import 'package:proyecto_titulacion/features/auth/ui/verification_page.dart';
 
 final router = GoRouter(
   initialLocation: '/login',
@@ -23,7 +23,17 @@ final router = GoRouter(
       path: '/home',
       builder: (_, __) => const MyMainLayout(),
     ),
-    
+    GoRoute(
+      path: '/verify',
+      builder: (context, state) {
+        final Map<String, dynamic> args = state.extra as Map<String, dynamic>;
+        return VerificationPage(
+          email: args['email']!,
+          password: args['password']!,
+          name: args['name']!,
+        );
+      },
+    ),
   ],
 
   redirect: (context, state) async {
@@ -32,7 +42,8 @@ final router = GoRouter(
       final loggedIn = session.isSignedIn;
 
       final goingToAuthPage = state.matchedLocation == '/login' ||
-                              state.matchedLocation == '/register';
+                              state.matchedLocation == '/register' ||
+                              state.matchedLocation == '/verify';
 
       // NO autenticado → solo permitir login/register
       if (!loggedIn && !goingToAuthPage) {
@@ -40,7 +51,7 @@ final router = GoRouter(
       }
 
       // Autenticado → evitar ir al login/register
-      if (loggedIn && goingToAuthPage) {
+      if (loggedIn && goingToAuthPage && state.matchedLocation != '/verify') {
         return '/home';
       }
 

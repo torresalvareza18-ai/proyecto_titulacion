@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:proyecto_titulacion/features/perfil/controller/user_preferences_controller.dart';
 
 class ProfileCard extends StatelessWidget {
-  const ProfileCard({super.key});
+  final String name;
+  final String email;
+  const ProfileCard({super.key, required this.name, required this.email});
 
   @override
   Widget build(BuildContext context) {
     const double coverHeight = 160.0;
     const double avatarRadius = 60.0;
+
 
     return Card(
       margin: const EdgeInsets.all(16),
@@ -43,7 +48,7 @@ class ProfileCard extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      'Adrián García',
+                      name,
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -52,7 +57,7 @@ class ProfileCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Ingeniería en Informática',
+                      email,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -60,13 +65,7 @@ class ProfileCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      'adrian.garcia@alumno.ipn.mx',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.green[600],
-                      ),
-                    ),
+                    
                   ],
                 ),
               ),

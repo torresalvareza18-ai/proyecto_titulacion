@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:amplify_api/amplify_api.dart';
-import 'package:amplify_core/amplify_core.dart'; // <-- ¡Asegúrate que esta línea esté presente!
+import 'package:amplify_core/amplify_core.dart';
+import 'package:amplify_storage_s3/amplify_storage_s3.dart'; 
 import 'package:proyecto_titulacion/models/ModelProvider.dart';
+import 'package:amplify_flutter/amplify_flutter.dart' hide Amplify;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final postsAPIServiceProvider = Provider<PostsAPIService>((ref) {
@@ -17,11 +18,11 @@ class PostsAPIService {
 
   Future<List<Post>> getPosts() async {
     try {
-      final request = ModelQueries.list(Post.classType, where: Post.TYPE.eq("Post"),);
+      final request = ModelQueries.list(Post.classType);
       final response = await Amplify.API.query(request: request).response;
 
       final posts = response.data?.items.whereType<Post>().toList() ?? [];
-      posts.sort((a,b) => b.createdAt!.compareTo(a.createdAt!));
+      posts.sort((a,b) => b.createdAt.compareTo(a.createdAt));
       return posts;
   
     } on Exception catch (error) {
@@ -32,11 +33,21 @@ class PostsAPIService {
   }
 
   Future<PostTagPage> getPostTagsPaginated({
-    required String tagName,
+    required List<String> preferences,
     String? nextToken,
     int limit = 20,
   }) async {
-    final bool showAll = tagName == "todos";
+    final bool showAll = preferences.isEmpty;
+
+
+    String buildFilter(List<String> preferences) {
+      if (preferences.isEmpty) return '';
+      final orFilters =
+          preferences.map((tag) => '{ tagName: { eq: "$tag" } }').join(', ');
+      return 'filter: { or: [ $orFilters ] }';
+    }
+
+    final filterString = buildFilter(preferences);
 
     final document = showAll
         ? '''
@@ -55,9 +66,9 @@ class PostsAPIService {
           }
         '''
         : '''
-          query ListPostTagsFiltered(\$tagName: String!, \$limit: Int, \$nextToken: String) {
+          query ListPostTagsFiltered(\$limit: Int, \$nextToken: String) {
             listPostTags(
-              filter: { tagName: { eq: \$tagName } },
+              $filterString,
               limit: \$limit,
               nextToken: \$nextToken
             ) {
@@ -65,68 +76,186 @@ class PostsAPIService {
                 id
                 postId
                 tagName
+                createdAt
+                updatedAt
               }
               nextToken
             }
           }
         ''';
 
-    final variables = showAll
-        ? {
-            "limit": limit,
-            "nextToken": nextToken,
-          }
-        : {
-            "tagName": tagName,
-            "limit": limit,
-            "nextToken": nextToken,
-          };
+    final variables = {
+      "limit": limit,
+      "nextToken": nextToken,
+    };
 
     final request = GraphQLRequest(
       document: document,
       variables: variables,
     );
 
-    final response = await Amplify.API.query(request: request).response;
 
-    final Map<String, dynamic> json = jsonDecode(response.data);
-    final data = json['listPostTags'];
+    try {
+      final response = await Amplify.API.query(request: request).response;
+     
 
-    if (data == null) return PostTagPage(items: [], nextToken: null);
+      if (response.data == null) {
+          return PostTagPage(items: [], nextToken: null);
+      }
 
-    final items = (data['items'] as List)
-        .map((json) => PostTag.fromJson(Map<String, dynamic>.from(json)))
-        .toList();
+      final Map<String, dynamic> json = jsonDecode(response.data);
+      final data = json['listPostTags'];
 
-    return PostTagPage(items: items, nextToken: data['nextToken']);
+
+      if (data == null) return PostTagPage(items: [], nextToken: null);
+
+      final items = (data['items'] as List)
+          .map((json) => PostTag.fromJson(Map<String, dynamic>.from(json)))
+          .toList();
+
+
+      return PostTagPage(items: items, nextToken: data['nextToken']);
+    } catch (e) {
+      safePrint('ERROR getPostTagsPaginated: $e');
+      return PostTagPage(items: [], nextToken: null);
+    }
   }
 
-
-  Future<PaginatedResult<Post>> getPostsByTagPaginated({
-    required String tagName,
+Future<PaginatedResult<Post>> getPostsByTagPaginated({
+    required List<String> preferences,
     required String? nextToken, 
     int limit = 20,
   }) async {
     try {
+      // 1. Obtener tags
       final tagPage = await getPostTagsPaginated(
-        tagName: tagName,
+        preferences: preferences,
         nextToken: nextToken,
         limit: limit,
       );
 
-      List<Post> posts = [];
+      // 2. IDs únicos
+      final Set<String> uniquePostIds = {};
       for (var tag in tagPage.items) {
-        if (tag.postId != null) {
-          final post = await _getPostById(tag.postId!);
-          if (post != null) posts.add(post);
+        uniquePostIds.add(tag.postId!);
+      }
+
+      // 3. Descarga paralela
+      final futureRequests = uniquePostIds.map((postId) => _getPostById(postId));
+      final results = await Future.wait(futureRequests);
+      final validPosts = results.whereType<Post>().toList();
+
+      // --- HELPER 1: Extraer String del JSON ---
+      String getFirstDateString(String? rawDates) {
+        if (rawDates == null || rawDates.isEmpty) return "Próximamente";
+        try {
+          // Limpiamos un poco por si viene con comillas extra
+          final cleanRaw = rawDates.replaceAll('"', '').replaceAll('[', '').replaceAll(']', '');
+          if (cleanRaw.contains(',')) {
+             return cleanRaw.split(',')[0].trim();
+          }
+          // Intento de decodificar JSON estándar
+          final List<dynamic> parsedList = jsonDecode(rawDates);
+          if (parsedList.isNotEmpty) return parsedList.first.toString();
+          return "Próximamente";
+        } catch (e) {
+          // Si falla el JSON, devolvemos el string limpio
+          return rawDates.replaceAll('[', '').replaceAll(']', '').replaceAll('"', '');
         }
       }
 
+      // --- HELPER 2: PARSER FLEXIBLE (La solución mágica) ---
+      DateTime? parseFlexibleDate(String input) {
+        if (input.toLowerCase().contains("próx")) return null;
+        
+        // 1. Intenta formato estándar ISO (2025-10-30)
+        DateTime? dt = DateTime.tryParse(input);
+        if (dt != null) return dt;
+
+        // 2. Intenta formato Latino (30/10/2025 o 30-10-2025)
+        try {
+          // Divide por "/" o "-"
+          final parts = input.split(RegExp(r'[-/]'));
+          if (parts.length == 3) {
+            final day = int.parse(parts[0]);
+            final month = int.parse(parts[1]);
+            final year = int.parse(parts[2]);
+            // Reconstruye año completo si viene corto (ej 25 -> 2025)
+            final fullYear = year < 100 ? 2000 + year : year;
+            return DateTime(fullYear, month, day);
+          }
+        } catch (e) {
+          return null; 
+        }
+        return null;
+      }
+
+      // --- ORDENAMIENTO CON DEBUG ---
+      final now = DateTime.now().subtract(const Duration(days: 1)); 
+
+      
+      validPosts.sort((a, b) {
+        final String strA = getFirstDateString(a.dates);
+        final String strB = getFirstDateString(b.dates);
+        
+        final DateTime? dateA = parseFlexibleDate(strA);
+        final DateTime? dateB = parseFlexibleDate(strB);
+
+        final bool isProxA = strA.toLowerCase().contains("próx");
+        final bool isProxB = strB.toLowerCase().contains("próx");
+
+        // Asignar Prioridades:
+        // 1 = Futuro
+        // 2 = Próximamente
+        // 3 = Pasado
+        // 4 = Error/Desconocido
+        int getPriority(bool isProx, DateTime? date, String originalStr) {
+          if (date != null) {
+            if (date.isAfter(now)) return 1; // Futuro
+            return 3; // Pasado
+          }
+          if (isProx) return 2; // "Próximamente"
+          
+          // DEBUG: Si cae aquí, es porque la fecha no se pudo leer
+          print("⚠️ FECHA INVÁLIDA DETECTADA: '$originalStr' -> Prioridad 4");
+          return 4; 
+        }
+
+        final int priorityA = getPriority(isProxA, dateA, strA);
+        final int priorityB = getPriority(isProxB, dateB, strB);
+
+        // Nivel 1: Prioridad de grupos
+        if (priorityA != priorityB) {
+          return priorityA.compareTo(priorityB);
+        }
+
+        // Nivel 2: Desempate dentro del grupo
+        if (priorityA == 1) { // Futuros: Ascendente (Más cercano primero)
+          return dateA!.compareTo(dateB!);
+        } 
+        else if (priorityA == 3) { // Pasados: Descendente (Más reciente primero)
+          return dateB!.compareTo(dateA!);
+        }
+
+        return 0;
+      });
+
+
+      // Recursividad si quedó vacío
+      if (validPosts.isEmpty && tagPage.nextToken != null) {
+        return getPostsByTagPaginated(
+          preferences: preferences,
+          nextToken: tagPage.nextToken,
+          limit: limit,
+        );
+      }
+
       return PaginatedResult(
-        items: posts,
+        items: validPosts,
         hasNextPage: tagPage.nextToken != null,
         currentPage: 0, 
-        totalItems: posts.length,
+        totalItems: validPosts.length,
+        nextToken: tagPage.nextToken,
       );
     } catch (e) {
       safePrint('ERROR getPostsByTagPaginated: $e');
@@ -135,10 +264,10 @@ class PostsAPIService {
         hasNextPage: false,
         currentPage: 0,
         totalItems: 0,
+        nextToken: null,
       );
     }
   }
-
 
   Future<Post?> _getPostById(String postId) async {
     try {
@@ -176,6 +305,25 @@ class PostsAPIService {
       return [];
     }
   }
+
+  Future<String> getAmplifyImageUrl(String imageKey) async {
+    try {
+      final result = await Amplify.Storage.getUrl(
+        key: 'public/${imageKey}',
+        options: const StorageGetUrlOptions(
+          //accessLevel: StorageAccessLevel.guest,
+          pluginOptions: S3GetUrlPluginOptions(
+            validateObjectExistence: true,
+            expiresIn: Duration(days: 1),
+          ),
+        ),
+      ).result;
+      return result.url.toString();
+    } on StorageException catch (e) {
+      safePrint('Error al obtener URL: ${e.message}');
+      return ''; 
+    }
+  }
 }
 
 class PaginatedResult<T> {
@@ -183,15 +331,15 @@ class PaginatedResult<T> {
   final bool hasNextPage;
   final int currentPage;
   final int totalItems;
+  final String? nextToken;
 
   PaginatedResult({
     required this.items,
     required this.hasNextPage,
     required this.currentPage,
     required this.totalItems,
+    this.nextToken,
   });
-
-  String? get nextToken => null;
 }
 
 class PostTagPage {
