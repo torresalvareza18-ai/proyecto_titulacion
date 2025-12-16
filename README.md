@@ -81,7 +81,7 @@ Usa siempre el prefijo `fvm` en la terminal para asegurar que usas la versión c
   `fvm flutter pub get`
 * **Genera modelo (Si la app falla):**
   `npx amplify codegen models`
-  `npx amplify push
+  `npx amplify push`
 
 ---
 **Tabla de Versiones Estrictas:**
