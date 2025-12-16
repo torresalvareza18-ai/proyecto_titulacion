@@ -1,4 +1,22 @@
-# Guía de Instalación del Proyecto
+# 🦅 Tablón Quetzal - Centralización de Notificaciones Académicas
+
+[![Descargar APK](https://img.shields.io/badge/Descargar%20APK-v1.0.0-success?style=for-the-badge&logo=android)](https://github.com/torresalvareza18-ai/proyecto_titulacion/releases/download/apk/app-release.apk)**
+
+**Proyecto de Titulación - UPIICSA (IPN)**
+*Prototipo para la centralización de notificaciones académicas (Grupo 8NM80).*c
+
+---
+
+## Sobre el proyecto
+**Tablón Quetzal** es una aplicación móvil diseñada para centralizar la información académica dispersa. Su objetivo principal es permitir a la comunidad de estudiante de Ingenieria en Informatica **consultar y mantenerse al día** con los comunicados oficiales desde una única fuente confiable.
+
+### 🚀 Funcionalidades Principales
+
+* **Visualización de Noticias:** Feed centralizado de comunicados oficiales mediante **AWS AppSync** (GraphQL).
+* **Guardado de Interés:** Los usuarios pueden marcar publicaciones importantes para lectura posterior (`UserSavedPost`).
+* **Categorización:** Filtrado de avisos mediante un catálogo de etiquetas (`TagCatalog`).
+* **Alertas:** Sistema de notificaciones (`Notifications`) para avisos urgentes o relevantes.
+* **Acceso Seguro:** Autenticación de usuarios para el acceso a la información mediante **Amazon Cognito**.
 
 ⚠️ **ADVERTENCIA:** Este proyecto requiere versiones EXACTAS de Flutter y herramientas. No intentes usar tu versión global o romperás el código.
 
@@ -35,7 +53,7 @@ Sigue estos pasos en orden dentro de la carpeta del proyecto:
 
 3.  **Descargar Configuración de Nube (AWS):**
     ```bash
-    npx amplify pull --appId <PON_AQUI_TU_APP_ID> --envName dev
+    npx amplify pull --appId d25fyq0w2m0x1q --envName dev
     ```
 
 ---
@@ -61,8 +79,9 @@ Usa siempre el prefijo `fvm` en la terminal para asegurar que usas la versión c
   `fvm flutter run`
 * **Instalar librerías:**
   `fvm flutter pub get`
-* **Comandos de Amplify:**
-  `npx amplify <comando>` (Ej: `npx amplify push`)
+* **Genera modelo (Si la app falla):**
+  `npx amplify codegen models`
+  `npx amplify push
 
 ---
 **Tabla de Versiones Estrictas:**
