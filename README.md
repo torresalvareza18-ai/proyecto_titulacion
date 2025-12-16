@@ -88,3 +88,16 @@ Usa siempre el prefijo `fvm` en la terminal para asegurar que usas la versión c
 * Flutter: 3.38.2
 * Amplify CLI: 14.2.2
 * Java: 17
+
+---
+## 👥 Autores y Créditos
+
+**Desarrollado por:**
+* González Mejía Christian
+* Herrera Barrón Yareli
+* Mañoso Angeles Jesus
+* Martínez Martínez Adrian
+* Torres Alvarez Angel
+
+**Institución:**
+Unidad Profesional Interdisciplinaria de Ingeniería y Ciencias Sociales y Administrativas (UPIICSA) - Instituto Politécnico Nacional (IPN).
