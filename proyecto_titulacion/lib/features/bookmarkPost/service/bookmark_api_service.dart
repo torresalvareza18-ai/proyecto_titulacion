@@ -38,6 +38,7 @@ class BookmarkAPIService {
                   authorName
                   createdAt
                   updatedAt
+                  authorFamily
                 }
               }
             }
